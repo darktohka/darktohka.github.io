@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Behind Closed Doors'><title>Exploring Encrypted Multifiles: A Technical Overview</title>
+
+<link rel='canonical' href='https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Exploring Encrypted Multifiles: A Technical Overview'>
+<meta property='og:description' content='Behind Closed Doors'>
+<meta property='og:url' content='https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/'>
+<meta property='og:site_name' content='Daniel&#39;s Blog'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='reverse-engineering' /><meta property='article:published_time' content='2021-02-27T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2021-02-27T00:00:00&#43;00:00'/><meta property='og:image' content='https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/persona.png' />
+<meta name="twitter:title" content="Exploring Encrypted Multifiles: A Technical Overview">
+<meta name="twitter:description" content="Behind Closed Doors"><meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content='https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/persona.png' />
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu66a760a73ca557fd1ad844e3f86b97f1_21462_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+                    <span class="emoji">🙃</span>
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://tohka.us">Daniel&#39;s Blog</a></h1>
+        <h2 class="site-description">Interesting technical tidbits and fun facts</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/search'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>Search</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://tohka.us" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="has-image main-article">
+    <header class="article-header">
+        <div class="article-image">
+            <a href="/p/exploring-encrypted-multifiles-a-technical-overview/">
+                <img src="/p/exploring-encrypted-multifiles-a-technical-overview/persona_hue0043bc1966d96ecb5a80fc385cf81b3_696116_800x0_resize_box_2.png"
+                        srcset="/p/exploring-encrypted-multifiles-a-technical-overview/persona_hue0043bc1966d96ecb5a80fc385cf81b3_696116_800x0_resize_box_2.png 800w, /p/exploring-encrypted-multifiles-a-technical-overview/persona_hue0043bc1966d96ecb5a80fc385cf81b3_696116_1600x0_resize_box_2.png 1600w"
+                        width="800" 
+                        height="448" 
+                        loading="lazy"
+                        alt="Featured image of post Exploring Encrypted Multifiles: A Technical Overview" />
+                
+            </a>
+        </div>
+    
+
+    <div class="article-details">
+    
+
+    <h2 class="article-title">
+        <a href="/p/exploring-encrypted-multifiles-a-technical-overview/">Exploring Encrypted Multifiles: A Technical Overview</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        Behind Closed Doors
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Feb 27, 2021</time>
+    </footer></div>
+</header>
+
+    <section class="article-content"><p><strong>Not interested in the various technical tidbits? <a class="link" href="#introducing-p3dephaser-a-gui-application-to-extract-multifile-passwords" >Skip to the end-user demo at the end of the article!</a></strong></p>
+<h1>Table of Contents</h1>
+<b><nav id="TableOfContents">
+  <ul>
+    <li><a href="#resources">Resources</a></li>
+    <li><a href="#preface-lets-talk-about-multifiles">Preface: Let&rsquo;s talk about multifiles</a></li>
+    <li><a href="#the-brief-history-of-multifiles">The brief history of multifiles</a></li>
+    <li><a href="#a-deep-dive-into-the-multifile-format">A deep dive into the multifile format</a>
+      <ul>
+        <li><a href="#our-test-subject">Our test subject</a></li>
+        <li><a href="#the-overall-format">The overall format</a></li>
+        <li><a href="#component-1-the-multifile-header">Component 1: The multifile header</a></li>
+        <li><a href="#component-2-a-typical-subfile-index-entry">Component 2: A typical subfile index entry</a>
+          <ul>
+            <li><a href="#linked-lists-explained">Linked lists, explained</a></li>
+            <li><a href="#reading-our-first-subfile-index-entry">Reading our first subfile index entry</a></li>
+            <li><a href="#subfile-flags">Subfile flags</a></li>
+            <li><a href="#reading-our-second-subfile-index-entry">Reading our second subfile index entry</a></li>
+            <li><a href="#but-can-we-go-beyond">But can we go beyond?</a></li>
+          </ul>
+        </li>
+        <li><a href="#component-3-subfile-data">Component 3: Subfile data</a></li>
+      </ul>
+    </li>
+    <li><a href="#about-encrypted-multifiles">About encrypted multifiles</a></li>
+    <li><a href="#why-encrypt-multifiles">Why encrypt multifiles?</a>
+      <ul>
+        <li><a href="#preventing-exploits">Preventing exploits</a></li>
+        <li><a href="#hiding-unreleased-features">Hiding unreleased features</a></li>
+        <li><a href="#preventing-unauthorized-usage-of-game-assets">Preventing unauthorized usage of game assets</a></li>
+      </ul>
+    </li>
+    <li><a href="#characteristics-of-encrypted-subfiles">Characteristics of encrypted subfiles</a>
+      <ul>
+        <li><a href="#the-encryption-header">The encryption header</a></li>
+      </ul>
+    </li>
+    <li><a href="#verifying-passwords">Verifying passwords</a></li>
+    <li><a href="#panda3d-encryption-demo-sample-program-with-an-encrypted-multifile">Panda3D Encryption Demo: Sample program with an encrypted multifile</a></li>
+    <li><a href="#finding-the-encryption-password-setter-function-with-ida-pro">Finding the encryption password setter function with IDA Pro</a></li>
+    <li><a href="#memory-scanning-as-a-means-to-extract-multifile-passwords">Memory scanning as a means to extract multifile passwords</a>
+      <ul>
+        <li><a href="#what-is-memory">What is memory?</a></li>
+        <li><a href="#what-is-a-pointer">What is a pointer?</a></li>
+        <li><a href="#class-memory-layouts-in-c">Class memory layouts in C++</a></li>
+        <li><a href="#stdstring-internals">std::string internals</a></li>
+        <li><a href="#the-multifile-memory-layout">The Multifile memory layout</a>
+          <ul>
+            <li><a href="#multifile-layout">Multifile layout</a></li>
+            <li><a href="#filename-layout">Filename layout</a></li>
+          </ul>
+        </li>
+        <li><a href="#proposed-angle-of-approach">Proposed angle of approach</a>
+          <ul>
+            <li><a href="#step-one-search-for-all-instances-of-phase_1ef-in-the-memory">Step one: Search for all instances of phase_1.ef in the memory</a></li>
+            <li><a href="#step-two-figure-out-the-beginning-address-of-the-filename">Step two: Figure out the beginning address of the Filename</a></li>
+            <li><a href="#step-three-find-our-multifile-object-in-memory">Step three: Find our Multifile object in memory</a></li>
+            <li><a href="#step-four-confirm-that-weve-found-a-multifile-object">Step four: Confirm that we&rsquo;ve found a Multifile object</a></li>
+            <li><a href="#step-five-extract-the-encryption-password-from-the-multifile-object">Step five: Extract the encryption password from the Multifile object</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#introducing-p3dephaser-a-gui-application-to-extract-multifile-passwords">Introducing P3Dephaser: A GUI application to extract multifile passwords</a>
+      <ul>
+        <li><a href="#how-to-use-p3dephaser">How to use P3Dephaser</a></li>
+      </ul>
+    </li>
+    <li><a href="#concluding-notes">Concluding notes</a></li>
+  </ul>
+</nav></b>
+
+<h2 id="resources">Resources</h2>
+<p>The following resources can be used in this article by end-users:</p>
+<ul>
+<li><a class="link" href="https://github.com/darktohka/panda3d-encryption-demo"  target="_blank" rel="noopener"
+    >Panda3D Encryption Demo - available on GitHub</a> - <a class="link" href="https://github.com/darktohka/panda3d-encryption-demo/releases/latest"  target="_blank" rel="noopener"
+    >Download</a></li>
+<li><a class="link" href="https://github.com/darktohka/p3dephaser"  target="_blank" rel="noopener"
+    >P3Dephaser, a GUI application used to extract multifile passwords - available on GitHub</a> - <a class="link" href="https://github.com/darktohka/p3dephaser/releases/latest"  target="_blank" rel="noopener"
+    >Download</a></li>
+</ul>
+<p>The following resources can be used to follow this article (for enthusiasts and brave folk):</p>
+<ul>
+<li><a class="link" href="https://www.python.org/downloads/release/python-392"  target="_blank" rel="noopener"
+    >Python 3.9.2</a></li>
+<li><a class="link" href="https://github.com/panda3d/panda3d"  target="_blank" rel="noopener"
+    >The Panda3D source tree</a></li>
+<li><a class="link" href="https://visualstudio.microsoft.com/downloads"  target="_blank" rel="noopener"
+    >Visual Studio 2019</a></li>
+<li><a class="link" href="https://gist.github.com/darktohka/afee984e1199c2cd62b7bbb8b1fdea47"  target="_blank" rel="noopener"
+    >Multifile implementation in Python</a></li>
+</ul>
+<h2 id="preface-lets-talk-about-multifiles">Preface: Let&rsquo;s talk about multifiles</h2>
+<p>Most people who have played Toontown Online between 2001 and 2013 are very familiar with the concept of multifiles. After all, multifiles allowed players to peek into the art assets of Toontown, all for a noble goal: creating content packs that had the power to modify the visual look, as well as the music of the game.</p>
+<p>Many texture artists have begun their careers making new texture art for Toontown and its various derivatives. These artists are responsible for creating entire new experiences, transforming the atmosphere and overall feel of the game. Content packs such as <a class="link" href="https://uglycorny.net/packs.html"  target="_blank" rel="noopener"
+    >Toontown Nightlife</a> or <a class="link" href="https://uglycorny.net/packs.html"  target="_blank" rel="noopener"
+    >Toontown at Dusk</a> are staples of the community and are known by almost all players.</p>
+<p>What&rsquo;s common between those content packs? They&rsquo;re all packaged and distributed as <strong>multifiles</strong>. That already gives us an idea as to what multifiles are. Multifiles contain multiple files: but what exactly do they contain? What are these files? Let&rsquo;s take a look.</p>
+<h2 id="the-brief-history-of-multifiles">The brief history of multifiles</h2>
+<p>Since when exactly are multifiles a thing? Thankfully, the engine that was used to create Toontown is completely open source, and licensed under a fairly permissive license. This engine is called <a class="link" href="http://panda3d.org"  target="_blank" rel="noopener"
+    >Panda3D</a>, and its source code is currently available on <a class="link" href="https://github.com/panda3d/panda3d"  target="_blank" rel="noopener"
+    >GitHub</a>. We may glance at the commit history - i.e. the history of the code&rsquo;s evolution, from the beginning to today - to determine how exactly multifiles were born.</p>
+<p>The earliest version of the multifile code that we have today dates back to <a class="link" href="https://github.com/panda3d/panda3d/blob/2fd714e52fc41e38f23d4f50078e192f3fc3b9d5/panda/src/express/multifile.cxx"  target="_blank" rel="noopener"
+    >Oct 4, 2000</a>. On Oct 4, 2000 the Panda3D source tree was created, and all of the code that was previously written for the engine was merged into this tree. This is the earliest multifile code that we can find today through public means. This source code is plenty enough for our purposes, however: from it, we can learn that the multifile system began development on <strong>Jan 9, 1997</strong>, a whopping <strong>24 years ago!</strong><sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>This multifile system was significantly different from the one we have today: it did not have a versioning system (instead, it solely relied on a well-known, and decided in advance magic number), had a completely different header, and saved <em>memfiles</em> rather than modern <em>subfiles</em>, in a format that only looks similar to the modern multifile system we are familiar with today.</p>
+<p><strong>Why were multifiles invented in the first place?</strong> Not many know, but Panda3D used to have a proper acronym back in the day: PANDA used to stand for <strong>Platform-Agnostic, Networked, Display Architecture</strong>.<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> Nowadays, this acronym is rarely used, and the current maintainers of the project often stress the obsolete status of the aforementioned acronym. However, let us discuss the relevance of the second attribute: <strong>Networked</strong>. This attribute is linked to three different functionalities of Panda3D: it refers to the fact that Panda3D can be used in <strong>multi-server rendering workflows</strong>, the fact that Panda3D can be used to <strong>synchronize client state using the Distributed Object system</strong>, as well as to the fact that the engine supports <strong>downloading game assets from a central download server</strong>.<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
+<p>Let&rsquo;s discuss that last aspect for now. MMORPGs are relatively large games, most often, but not always, larger in scope than other game genres such as FPS games. To provide an example, <em>World of Warcraft</em>, a popular MMORPG takes up 100 GB of available hard disk space as of Feb 27, 2021.<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup> This was especially true in the early 21st century. CDs had merely 700 MBs of available space, and most games that were available to purchase in retail had to make do with that much space. As such, games were often cut back graphically, or shipped with low quality audio to create disk space budget for more important content.</p>
+<p>But <strong>MMORPGs were different</strong>. MMORPGs like Toontown Online could not be shipped easily on CDs. An MMORPG cannot exist for long without being updated. If an MMORPG is shipped on a CD, it will quickly become obsolete after being updated. <strong>But how do you update an MMORPG in an age when slow 56k modems reign supreme?</strong> Disney&rsquo;s engineers took on this fascinating problem.</p>
+<p><strong>They decided to split the entire game world into multiple smaller <em>phases</em>.</strong> Each phase allows you to access a more broad subset of the entire game world. For example, <strong>downloading the first two phases</strong> allows you to start the game binary, <strong>downloading the third phase</strong> grants you the ability to play through the tutorial of the game, <strong>downloading the fourth phase</strong> lets you access the first actual game area, and so on. <strong>Downloading all phases</strong> grants access to the entire game world.</p>
+<p>How is this useful?</p>
+<ul>
+<li>
+<p><em>For starters</em>, splitting the game world into smaller files means that your players will only need to download the <strong>first few phases</strong> in order to <strong>start playing immediately.</strong> This is a great advantage when you&rsquo;re administrating an MMORPG, as your players may get bored and may never play at all if they have to excruciatingly wait for hours on end just to begin playing.</p>
+</li>
+<li>
+<p><em>Secondly</em>, having the game loaded so quickly allows you to <em>transparently</em> download the rest of the game while the player is already engaged with the game.</p>
+</li>
+<li>
+<p><em>Thirdly</em>, if you make changes to a portion of the game world, you only have to push updates for the <em>relevant portion of the whole game world</em>. The benefits of this are especially amplified by Panda3D&rsquo;s patch system, which allows each multifile to be patched without redownloading the entire multifile, just the individual changes themselves.</p>
+</li>
+<li>
+<p><em>And last but not least</em>, having smaller game archives dramatically cuts down on the update time necessary for the player to begin playing after a short absence from the game.</p>
+</li>
+</ul>
+<p>You may have guessed that we aren&rsquo;t talking about this system for no reason. <strong>Multifiles were created in order to facilitate this system.</strong> All phases are contained within their own <em>multifile</em>, which contains all of the resources necessary to render a specific subset of the game world.</p>
+<p>According to the Panda3D wiki:<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup></p>
+<blockquote>
+<p>A multifile is a file that contains a set of files, similar to a .zip or .rar archive file. They are meant for containing multiple resources such as models, textures, sounds, shaders, and so on, and Panda can load them directly from the multifiles without having to unpack them first. Many games employ a similar concept of &ldquo;data&rdquo; file such as .upk for Unreal Engine and .pak for Quake Engine.</p>
+</blockquote>
+<p>Multifiles are a special file format specific to the Panda3D game engine. They contain game assets, akin to how a ZIP file contains regular files. Multifiles can be easily extracted (and created) using one of Panda3D&rsquo;s built-in tools: <em>multify.exe</em>. <strong>More details about the <em>multify.exe</em> utility may be found at the <a class="link" href="https://docs.panda3d.org/1.10/python/programming/advanced-loading/multifiles"  target="_blank" rel="noopener"
+    >Panda3D wiki</a>.</strong></p>
+<p>Since the multifile format&rsquo;s creation in 1997, it has gone through many changes:</p>
+<ul>
+<li><a class="link" href="https://github.com/panda3d/panda3d/commit/b1dc8b2fa61259095a093dc5d00f8cf274ea74c3"  target="_blank" rel="noopener"
+    >On Aug 02, 2002, it was completely rewritten by David Rose.</a> This new multifile format is close to the format we know today. It introduces <em>subfiles</em>, subfile flags, version information, and finally allows the deletion of subfiles from a multifile.</li>
+<li><a class="link" href="https://github.com/panda3d/panda3d/commit/89528a5fc9e52bda9c95b8fd98168a58f5e08fb1"  target="_blank" rel="noopener"
+    >Since Aug 04, 2002, subfiles from multifiles can finally be mounted to Panda3D&rsquo;s virtual file system</a>, allowing game assets to be streamed from a multifile without unpacking first to the hard drive.</li>
+<li><a class="link" href="https://github.com/panda3d/panda3d/commit/8d55c759de6e92f9a3d973bc13b976eed3e1496c"  target="_blank" rel="noopener"
+    >On Aug 06, 2002, compression support was added, reducing the file size of multifiles even further</a>.</li>
+<li><a class="link" href="https://github.com/panda3d/panda3d/commit/e51ecacdee7fc47fd5817b85e61b9eb56721d34d"  target="_blank" rel="noopener"
+    >On Sep 02, 2002, encrypted subfile support was added to multifiles</a>. This allows game assets to be encrypted using a password, on an individual basis. We&rsquo;ll be looking at this feature in particular shortly.</li>
+<li><a class="link" href="https://github.com/panda3d/panda3d/commit/87a912818b2cbbe9414adad7ab9360235e38f79b"  target="_blank" rel="noopener"
+    >Since June 09, 2006, timestamps are added to each multifile, and all of its subfiles</a>. This allows the compilation date of a multifile to be determined.</li>
+<li><a class="link" href="https://github.com/panda3d/panda3d/commit/3c0e7016593aa63123286d608d9eee3f7a8c974b"  target="_blank" rel="noopener"
+    >Since Sep 06, 2009, multifiles may be cryptographically signed</a>. This prevents tampering by third-party entities, such as hackers trying to exploit a game, by allowing the game developer to <em>sign</em> all of their game assets, and selectively prevent the game from loading any assets that are not created by the game developers. Before this change, <strong>hackers were known to replace in-game models in order to give themselves an unfair gameplay edge.</strong> For example, replacing entire race tracks with models that had the finish line at the very beginning of the track allowed hackers to <strong>instantly win any race</strong>. With signing, developers may require all model files to be signed to prevent any modifications, but may allow unsigned texture or audio changes.</li>
+</ul>
+<p>In this post, we&rsquo;ll be discussing the technical aspect of the multifile format. We&rsquo;ll also attempt to reverse engineer <em>encrypted</em> multifiles, in an attempt to demonstrate how, at best, it only serves as <em>security through obscurity</em>.</p>
+<h2 id="a-deep-dive-into-the-multifile-format">A deep dive into the multifile format</h2>
+<p>While there is no public information on the multifile format on the Panda3D wiki, we may look to other sources to understand this file format. In particular, David Rose, the engineer responsible for reworking the multifile system in 2002, provides a <a class="link" href="https://github.com/panda3d/panda3d/blob/e4573ef0fe524d90f1563e8740e932ef7f22cd93/panda/src/express/multifile.cxx#L67"  target="_blank" rel="noopener"
+    >lengthy explanation of the format directly in the Panda3D source code</a>. This documentation is, unfortunately, not exported to the Panda3D manual, but it does reward those who directly read the source code.</p>
+<p>A multifile is a <strong>binary</strong> file. It is specifically made for the computer to understand easily, and is not meant to be read by humans. As such, opening a multifile in a text editor, such as Notepad++, will not result in anything human readable.</p>
+<figure>
+    <img src="multifile_gibberish.png"
+         alt="What is THIS supposed to mean?!"/> <figcaption>
+            <p>What is THIS supposed to mean?!</p>
+        </figcaption>
+</figure>
+
+<p>In order to try to understand this peculiar format, we&rsquo;ll be using simple tables to try to understand how a typical multifile is packed. Once we understand the layout of a typical multifile, we&rsquo;ll be using <a class="link" href="https://www.python.org/downloads/release/python-392"  target="_blank" rel="noopener"
+    >Python 3.9.2</a> with Panda3D installed (<code>pip install panda3d</code>) to read the metadata of a simple multifile with just two subfiles. To make things easier to understand, all offsets will be represented in <em>decimal</em> format (i.e. regular numbers).</p>
+<h3 id="our-test-subject">Our test subject</h3>
+<p>Before we begin to disect the multifile format, let&rsquo;s create a new multifile, so that we can try a few things out ourselves.</p>
+<p>Create a new folder called <code>phase_1</code>, and create two new files inside this folder: <code>note.txt</code> and <code>note2.txt</code>.</p>
+<p><code>note.txt</code> should contain the following text: <code>Your voice is my voice</code></p>
+<p><code>note2.txt</code> should contain the following text: <code>Now and forever</code></p>
+<figure>
+    <img src="phase_1.png"
+         alt="The structure of our example phase_1 folder"/> <figcaption>
+            <p>The structure of our example phase_1 folder</p>
+        </figcaption>
+</figure>
+
+<p>Open a command prompt in your <code>phase_1</code> folder, and run the following command:</p>
+<p><code>multify -c -f phase_1.mf note.txt note2.txt</code></p>
+<p>You have successfully created our multifile test subject! <strong>Congratulations!</strong></p>
+<p style="text-align: center"><video controls preload="auto" width="75%"  autoplay loop muted class="html-video">
+    <source src="/p/exploring-encrypted-multifiles-a-technical-overview/create_phase_1.mp4" type="video/mp4" }}>
+</video></p>
+<h3 id="the-overall-format">The overall format</h3>
+<p>Let&rsquo;s begin! Each multifile that has been <strong>properly packed</strong> will have the following format:</p>
+<table>
+<thead>
+<tr>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Multifile Header</td>
+<td>Subfile Index Entries</td>
+<td>Subfile Data</td>
+</tr>
+</tbody>
+</table>
+<p>As we can see, the first thing in a multifile will be the header of the multifile, followed by all the subfile index entries that exist within the multifile, and finally, the actual subfile data. This is assuming a <strong>properly packed</strong> multifile. In a multifile that has not been properly packed, the subfile index entries and the subfiles may easily be in a completely random order. However, even in multifiles that have <em>not been properly packed</em>, the multifile header is guaranteed to be followed by a subfile index entry. This allows us to traverse even those kind of multifiles easily.</p>
+<h3 id="component-1-the-multifile-header">Component 1: The multifile header</h3>
+<p>Let&rsquo;s look at the multifile header next:</p>
+<table>
+<thead>
+<tr>
+<th>Offset</th>
+<th>Field</th>
+<th>Value</th>
+<th>Length</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Magic Number</td>
+<td>char[6], always <code>pmf\x00\n\r</code></td>
+<td>6</td>
+<td>A unique identifier that lets Panda3D know it&rsquo;s dealing with a multifile. The <code>\n\r</code> at the end lets developers know when their binary multifiles are incorrectly treated as text files.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Major Version</td>
+<td>int16, usually <code>1</code></td>
+<td>2</td>
+<td>The major version of the multifile, this version is changed only when major changes are made to the format.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Minor Version</td>
+<td>int16, usually <code>1</code></td>
+<td>2</td>
+<td>The minor version of the multifile, this version is changed during incremental changes to the format.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Scale Factor</td>
+<td>uint32, usually <code>1</code></td>
+<td>4</td>
+<td>The scale factor of the multifile. This is used by a mechanism that allows multifiles to be larger than 4 GiB. If the scale factor is larger than 1, then the subfiles are evenly spaced out according to the scale factor, making it possible to index each multifile with a single 4 byte number. To make things simpler, we will only discuss multifiles with their scale factor set to 1.</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Timestamp</td>
+<td>uint32, <a class="link" href="https://www.unixtimestamp.com"  target="_blank" rel="noopener"
+    >Unix timestamp</a></td>
+<td>4</td>
+<td>The <a class="link" href="https://www.unixtimestamp.com"  target="_blank" rel="noopener"
+    >Unix timestamp</a> of the multifile. This lets developers know exactly when a multifile was created or modified.</td>
+</tr>
+</tbody>
+</table>
+<p>Well, that isn&rsquo;t so complicated, now is it? Let&rsquo;s unpack this header! Open Python and run the following code:</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">panda3d.core</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;phase_1.mf&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">dg</span> <span class="o">=</span> <span class="n">Datagram</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="n">di</span> <span class="o">=</span> <span class="n">DatagramIterator</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+
+<span class="n">magic_number</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">extract_bytes</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">major_version</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_int16</span><span class="p">()</span>
+<span class="n">minor_version</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_int16</span><span class="p">()</span>
+<span class="n">scale_factor</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint32</span><span class="p">()</span>
+<span class="n">timestamp</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint32</span><span class="p">()</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Magic number&#39;</span><span class="p">,</span> <span class="n">magic_number</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Major version&#39;</span><span class="p">,</span> <span class="n">major_version</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Minor version&#39;</span><span class="p">,</span> <span class="n">minor_version</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Scale factor&#39;</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Timestamp&#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">)</span>
+</code></pre></div><p>The following will be outputted to your console <em>(timestamps may vary)</em>:</p>
+<pre><code>Magic number b'pmf\x00\n\r'
+Major version 1
+Minor version 1
+Scale factor 1
+Timestamp 1614297912
+</code></pre><p>This is exactly what we expected! We have a multifile with version 1.1.</p>
+<h3 id="component-2-a-typical-subfile-index-entry">Component 2: A typical subfile index entry</h3>
+<p>Let&rsquo;s look at the subfile index entries next.</p>
+<table>
+<thead>
+<tr>
+<th>Offset</th>
+<th>Field</th>
+<th>Value</th>
+<th>Length</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Next Subfile Address</td>
+<td>uint32</td>
+<td>4</td>
+<td>This is the file offset that points to the next subfile index entry. We need to know this value in case our multifile is not properly packed. After we&rsquo;re done reading this index entry, we&rsquo;ll head HERE next! If this is 0, then the multifile contains no more subfiles.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Data Address</td>
+<td>uint32</td>
+<td>4</td>
+<td>This is the file offset that points to the actual subfile data. We need to know this value so we can extract our subfile.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Subfile Length</td>
+<td>uint32</td>
+<td>4</td>
+<td>This is the length of the subfile data. This contains the encryption and compression header data as well if the subfile is encrypted or compressed.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Subfile Flags</td>
+<td>uint16</td>
+<td>2</td>
+<td>These are all of the flags that are set on this subfile. Flags are basically special attributes. A list of all flags is provided below.</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Original Length</td>
+<td>uint32</td>
+<td>4</td>
+<td>The original length of the subfile. This is how large the subfile is after decryption and/or decompression. <strong>This field only appears when the subfile is compressed or encrypted!</strong></td>
+</tr>
+<tr>
+<td>14/18</td>
+<td>Timestamp</td>
+<td>uint32</td>
+<td>4</td>
+<td>The <a class="link" href="https://www.unixtimestamp.com"  target="_blank" rel="noopener"
+    >Unix timestamp</a> of the subfile. This lets developers know exactly when a subfile was created or modified. If this is set to 0, then the timestamp of the multifile should be used instead.</td>
+</tr>
+<tr>
+<td>18/20</td>
+<td>Length of Name</td>
+<td>uint16</td>
+<td>2</td>
+<td>This is the length of the subfile&rsquo;s name. It tells us how long the subfile&rsquo;s name is.</td>
+</tr>
+<tr>
+<td>20/24</td>
+<td>Subfile Name</td>
+<td>char[length]</td>
+<td>length</td>
+<td>This is the subfile&rsquo;s name. The length of this name is provided by the 16-bit number we just read previously. <strong>All characters must be individually transformed using the following function: <em>f(x) = 255 - x</em></strong> as they are obfuscated by Panda3D!</td>
+</tr>
+</tbody>
+</table>
+<p>Splendid! We can learn from this table that subfile index entries are stored as a <strong>linked list</strong>. In case you&rsquo;re not aware what a linked list is, it&rsquo;s a data structure that allows you to <em>link</em> together multiple objects together, by always telling the program the address of the next object.</p>
+<h4 id="linked-lists-explained">Linked lists, explained</h4>
+<figure>
+    <img src="linked_lists.png"/> 
+</figure>
+
+<p>Let&rsquo;s imagine a circle of kids. For simplicity&rsquo;s sake, there are 4 kids in this circle. You&rsquo;re a blindfolded person, trying to find all the kids that are part of the circle.</p>
+<p>You approach the first kid, and ask his name. He replies: <em>&ldquo;Daniel&rdquo;</em>, and tells you that the next kid is to his left.</p>
+<p>You approach the kid to his left, and ask her name. She replies: <em>&ldquo;Anna&rdquo;</em>, and tells you that the next kid is, once again, to her left.</p>
+<p>You approach the kid to her left, and ask her name. She replies: <em>&ldquo;Halley&rdquo;</em>, but warns you that there&rsquo;s an unoccupied hole in the circle to her left. &ldquo;Please, skip that hole and go to the kid that&rsquo;s 2 meters to my left.&rdquo;</p>
+<p>You then proceed to skip over that hole in the circle and approach the kid 2 meters to Anna&rsquo;s left. You ask his name, and he replies: <em>&ldquo;Max&rdquo;</em>. He tells you: &ldquo;Don&rsquo;t worry, there is no next kid. You&rsquo;ve visited all of us!&rdquo;</p>
+<p>Linked lists work the same way. You begin by reading the first object, and then continue by heading to the next object to read, until there are no more objects left to read.</p>
+<h4 id="reading-our-first-subfile-index-entry">Reading our first subfile index entry</h4>
+<p><strong>Let&rsquo;s try to read our two subfiles!</strong> Continue from the script that we ran previously:</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">read_subfile</span><span class="p">(</span><span class="n">di</span><span class="p">):</span>
+    <span class="n">next_subfile_address</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint32</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Next subfile address:&#39;</span><span class="p">,</span> <span class="n">next_subfile_address</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">next_subfile_address</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;There are no more subfiles.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">data_address</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint32</span><span class="p">()</span>
+    <span class="n">subfile_length</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint32</span><span class="p">()</span>
+    <span class="n">subfile_flags</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint16</span><span class="p">()</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint32</span><span class="p">()</span>
+    <span class="n">name_length</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">get_uint16</span><span class="p">()</span>
+    <span class="n">subfile_name</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">extract_bytes</span><span class="p">(</span><span class="n">name_length</span><span class="p">)</span>
+    <span class="n">subfile_name</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">([</span><span class="mi">255</span> <span class="o">-</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">subfile_name</span><span class="p">])</span> <span class="c1"># Transform name using f(x) = 255 - x</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Data address:&#39;</span><span class="p">,</span> <span class="n">data_address</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Subfile length:&#39;</span><span class="p">,</span> <span class="n">subfile_length</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Subfile flags:&#39;</span><span class="p">,</span> <span class="n">subfile_flags</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Timestamp:&#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Name length:&#39;</span><span class="p">,</span> <span class="n">name_length</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Subfile name:&#39;</span><span class="p">,</span> <span class="n">subfile_name</span><span class="p">)</span>
+
+<span class="n">read_subfile</span><span class="p">(</span><span class="n">di</span><span class="p">)</span>
+</code></pre></div><p>The following appears on the terminal <em>(timestamps may vary)</em>:</p>
+<pre><code>Next subfile address: 46
+Data address: 79
+Subfile length: 22
+Subfile flags: 64
+Timestamp: 1614297374
+Name length: 8
+Subfile name: b'note.txt'
+</code></pre><p>What? Our subfile flags are set to <em>64</em>? What does that mean? Otherwise, our subfile looks alright!</p>
+<h4 id="subfile-flags">Subfile flags</h4>
+<p>Here&rsquo;s the table of flags that may be used in relation to subfiles.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SF_deleted</td>
+<td>2<sup>0</sup>
+ <em>~ 1</em></td>
+<td>The subfile has been deleted from the multifile, so it should be ignored.</td>
+</tr>
+<tr>
+<td>SF_index_invalid</td>
+<td>2<sup>1</sup>
+ <em>~ 2</em></td>
+<td>The subfile has a corrupt index entry.</td>
+</tr>
+<tr>
+<td>SF_data_invalid</td>
+<td>2<sup>2</sup>
+ <em>~ 4</em></td>
+<td>The subfile has invalid data.</td>
+</tr>
+<tr>
+<td>SF_compressed</td>
+<td>2<sup>3</sup>
+ <em>~ 8</em></td>
+<td>The subfile is compressed.</td>
+</tr>
+<tr>
+<td>SF_encrypted</td>
+<td>2<sup>4</sup>
+ <em>~ 16</em></td>
+<td>The subfile is encrypted.</td>
+</tr>
+<tr>
+<td>SF_signature</td>
+<td>2<sup>5</sup>
+ <em>~ 32</em></td>
+<td>The subfile is a certificate, used to sign the multifile.</td>
+</tr>
+<tr>
+<td>SF_text</td>
+<td>2<sup>6</sup>
+ <em>~ 64</em></td>
+<td>The subfile is a text file, rather than a binary file.</td>
+</tr>
+</tbody>
+</table>
+<p>Our subfile flags were set to <em>64</em>. We can find this value in the table: it is the flag <code>SF_text</code>. This flag was set when our multifile was created, because our <code>note.txt</code> file is in fact a text file, not a binary file. Cool, isn&rsquo;t it?</p>
+<p>Of course, flags can be combined. For example, if you&rsquo;ve got a compressed and encrypted text file, then you would want the following flags: <code>SF_compressed</code>, <code>SF_encrypted</code> and <code>SF_text</code>. How would you set all of them? Just add them together! <code>8 + 16 + 64 = 88</code>. The flag corresponding to a compressed and encrypted text file would therefore be <code>88</code>.</p>
+<h4 id="reading-our-second-subfile-index-entry">Reading our second subfile index entry</h4>
+<p>Let&rsquo;s read our next subfile, by going to the next subfile address, which is at <code>46</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="n">di</span> <span class="o">=</span> <span class="n">DatagramIterator</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+<span class="n">di</span><span class="o">.</span><span class="n">skip_bytes</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>
+
+<span class="n">read_subfile</span><span class="p">(</span><span class="n">di</span><span class="p">)</span>
+</code></pre></div><p>Our output is now:</p>
+<pre><code>Next subfile address: 75
+Data address: 101
+Subfile length: 15
+Subfile flags: 64
+Timestamp: 1614297441
+Name length: 9
+Subfile name: b'note2.txt'
+</code></pre><p>Cool! We&rsquo;ve got <code>note2.txt</code> now too! We&rsquo;ve got both of our subfiles now.</p>
+<h4 id="but-can-we-go-beyond">But can we go beyond?</h4>
+<p>Still, let&rsquo;s try to read another subfile, this time from the next subfile address: <code>75</code>.</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="n">di</span> <span class="o">=</span> <span class="n">DatagramIterator</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+<span class="n">di</span><span class="o">.</span><span class="n">skip_bytes</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>
+
+<span class="n">read_subfile</span><span class="p">(</span><span class="n">di</span><span class="p">)</span>
+</code></pre></div><p>Looks like we&rsquo;ve reached the end of the multifile:</p>
+<pre><code>Next subfile address: 0
+There are no more subfiles.
+</code></pre><h3 id="component-3-subfile-data">Component 3: Subfile data</h3>
+<p>As a matter of practice, let&rsquo;s attempt to read the data of <code>note.txt</code> now. Recall that when we requested the subfile index entry for <code>note.txt</code>, we got the following output: <code>Data address: 79</code> and <code>Subfile length: 22</code>. As such, to read <code>note.txt</code>, we want to skip <code>79</code> bytes from the beginning of the file, and then read <code>22</code> bytes.</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="n">di</span> <span class="o">=</span> <span class="n">DatagramIterator</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+<span class="n">di</span><span class="o">.</span><span class="n">skip_bytes</span><span class="p">(</span><span class="mi">79</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">di</span><span class="o">.</span><span class="n">extract_bytes</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</code></pre></div><figure>
+    <img src="read_phase_1.png"
+         alt="That&amp;rsquo;s exactly what we put inside note.txt! Great job!!!"/> <figcaption>
+            <p>That&rsquo;s exactly what we put inside <code>note.txt</code>! Great job!!!</p>
+        </figcaption>
+</figure>
+
+<p>Similarly, we could read <code>note2.txt</code>. If you want to challenge yourself, try reading <code>note2.txt</code>! All of the tools required are at your disposal. Good luck!</p>
+<h2 id="about-encrypted-multifiles">About encrypted multifiles</h2>
+<p>Ever since Sep 02, 2002, Panda3D supports the encryption of subfiles within multifiles. To make encryption possible, the engine leverages the <a class="link" href="https://www.openssl.org"  target="_blank" rel="noopener"
+    >OpenSSL</a> toolkit. <a class="link" href="https://www.openssl.org"  target="_blank" rel="noopener"
+    >OpenSSL</a> is a general-purpose cryptography library that provides various cryptographic primitives for easy use. This takes the implementation of these cryptographic primitives out of the hands of Panda3D&rsquo;s maintainers, reducing the burden of maintenance and improving overall security.</p>
+<p>Encrypted multifiles are multifiles that contain <strong>only encrypted subfiles</strong>. In a sense, they are meant to be completely unreadable. Only the game engine should be able to read those encrypted multifiles. But is that really true? Is the engine the only one that can read and decrypt those encrypted multifiles? You guessed correctly: if that really was the case, this post most likely wouldn&rsquo;t exist.</p>
+<p>Encrypted multifiles have been around for a long time, but they have seldom been used. <em>It&rsquo;s very rare to actually see an encrypted multifile in the wild!</em> Multifiles are not encrypted by default, and it is <strong>always</strong> a conscious decision on the part of game developers to enable multifile encryption. These encrypted multifiles often have a special <code>.ef</code> extension, as opposed to the regular <code>.mf</code> extension. These <code>.ef</code> files have first appeared in actual usage in 2016, and their usage has since then died down. Modern games tend to forgo the multifile encryption process entirely, but there still exist a few Panda3D applications that, even now, use this specific <code>.ef</code> convention.</p>
+<p>Encrypted multifiles are protected by a password that is first used to encrypt them before shipping the game, and then later used by the game engine itself to decrypt them. Decryption of game assets found within multifiles is done <em>on-the-fly</em>. This approach is favored as opposed to decrypting the entire multifile upon loading: after all, multifiles are designed <strong>to be mounted</strong> to Panda3D&rsquo;s virtual file system. Unpacking the entire multifile upon loading would greatly impact loading times, memory usage, and also potentially hard disk usage, depending on the tentative implementation.</p>
+<p>Given that multifiles must be decrypted somehow on the client side, <strong>the client has to have access to the password at some point.</strong> If multifiles were unpacked entirely upon loading, the password could easily be discarded after the multifile load. This would improve security somewhat, and is an often suggested technique. Of course, it is not infallible: a simple debugger could be used to halt execution of the program as soon as the multifile begins loading. However, since Panda3D decrypts multifiles <em>on-the-fly</em>, it needs to keep the encryption password in memory indefinitely.</p>
+<p><strong>Therefore, encrypting multifiles provides only a false sense of <em>security through obscurity</em>.</strong> Because the client has access to the password at at least one point, anyone dedicated enough can easily extract the password either:</p>
+<ul>
+<li>from the runtime code using <em>static analysis of the executable</em> (by reversing the password generation algorithm)</li>
+<li>using
+<em>static analysis combined with instruction patching using codecaves</em> (by intercepting the encryption password setter function)</li>
+<li>using a <em>debugger</em> (by interrupting execution within the encryption password setter function and dumping the call stack)</li>
+<li>or by dumping the memory during execution.</li>
+</ul>
+<p>The first option is the most complicated. Since most Panda3D games are written in Python, attempting the first option would require you to:</p>
+<ol>
+<li>learn how the application&rsquo;s bytecode is packed</li>
+<li>figure out the bytecode layout</li>
+<li>dump the bytecode using the layout</li>
+<li>make sense of the bytecode, which might be non-standard</li>
+<li>and reverse engineer the original function.</li>
+</ol>
+<p>The second and third options are amongst the easiest, but they still require the usage of special tools that are subjectively difficult to learn. These options also require multiple steps, and messing up a single step would result in failure. They also require per-game disassembly and basic knowledge of reverse engineering. As such, the last option is the easiest to realize for a beginner - extracting the password from the application&rsquo;s memory during execution. However, we will also discuss the first option, albeit not in great detail.</p>
+<h2 id="why-encrypt-multifiles">Why encrypt multifiles?</h2>
+<p>This is an easy topic to cover. Traditionally, multifiles have not been encrypted. However, the following concerns can lead a game developer to encrypt their multifiles:</p>
+<h3 id="preventing-exploits">Preventing exploits</h3>
+<p>As mentioned before in this article, hackers may abuse the multifile system to their own benefit. Having access to a game&rsquo;s multifiles would allow them to modify the models that make up the game world. <strong>However, thanks to cryptographic signing, encrypting multifiles is no longer necessary to prevent hackers from exploiting your game.</strong> Signatures are specific to a single multifile, and editing the multifile in any way would break the signature. <em>Multifiles with broken signatures are not loaded by the game.</em> In addition to this, content packs can be implemented as to only allow visual or auditory effects to be modified, leaving all custom, unsigned and potentially dangerous models out of the virtual file system.</p>
+<h3 id="hiding-unreleased-features">Hiding unreleased features</h3>
+<p>A game developer might want to hide their unreleased features. As such, they will encrypt their multifiles, making sure that their players cannot have a glance at their assets. <em>This is unnecessary, however, and is not the right approach in the first place.</em> Data miners have always existed, and will always exist. People <strong>will</strong> find a way to access your content, and the only way to protect it is to follow <a class="link" href="https://nvie.com/posts/a-successful-git-branching-model"  target="_blank" rel="noopener"
+    >proper Git version control branching best practices</a>. By employing a successful branch workflow, your unreleased features will never make it into production.</p>
+<h3 id="preventing-unauthorized-usage-of-game-assets">Preventing unauthorized usage of game assets</h3>
+<p>Some game developers have grown paranoid that their game assets will eventually be stolen and used to create exact copies of their games. This paranoia stems from the years between <code>2013</code> and <code>2017</code>, a notorious time period in which novice developers took the game assets of already existing games, and used them to create copies of games, only changing the name of the game and other miscellaneous details. Coincidentally, this is also the same time period in which encrypted multifiles became a topic of discussion.</p>
+<p>Nowadays, the fad of creating copy-paste projects has largely died down. Most of this can be attributed to the fact that the novice developers that were largely responsible for this phenomenon have since then matured and turned into knowledgeable individuals, leading to a complete paradigm shift in thinking. Some projects, however, still employ encryption. Most of them do so simply because their multifile loading systems were created in this time period, and has not been revised since.</p>
+<p><strong>Focus has also mostly shifted to creative work, rather than simply just programming.</strong> Nowadays, creative people are more popular than their programmer counterparts. Channels such as <a class="link" href="https://youtube.com/channel/UCdYoa4G7v34d7WAsnMgdD6g"  target="_blank" rel="noopener"
+    >Smokin' Foreman</a> and <a class="link" href="https://youtube.com/channel/UCKV9T6oi2VNaxEkpX0IJctA"  target="_blank" rel="noopener"
+    >ToontownDock</a> are very popular amongst players. Creators create content using existing game assets as their base. Without access to game assets, they cannot create their videos.</p>
+<p><strong>The usage of encrypted multifiles leads to a scenario in which game assets are treated as a luxury.</strong> Ordinary people do not have access to these game assets. Rather, only <em>popular creators with well-established connections</em> can ever access those assets. This leads to a <em>Partner Program</em>-esque situation in which only a select few are allowed to create content, and the rest&rsquo;s work is severely hindered by the lack of support. <strong>Attempting to help these unprivileged creators often leads to being bullied into submission by game developers.</strong></p>
+<h2 id="characteristics-of-encrypted-subfiles">Characteristics of encrypted subfiles</h2>
+<p>Encrypted subfiles are similar to regular subfiles, but their format is a bit different.</p>
+<p>We can observe the following differences:</p>
+<ul>
+<li>Encrypted subfiles have one extra binary field: <strong>Original Length</strong>, which is the original length of the subfile. This marks the size of the subfile after decryption in bytes.</li>
+<li>Encrypted subfiles have the following subfile flag set at all times: <code>SF_encrypted</code> (2<sup>4</sup>
+ <em>~ 16</em>)</li>
+<li>Encrypted subfile data contains more than just subfile data: it contains its own encryption header, which holds information about the algorithm used to encrypt the subfile.</li>
+</ul>
+<h3 id="the-encryption-header">The encryption header</h3>
+<p>All encryption subfile data is preceded by the following encryption header:<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup></p>
+<table>
+<thead>
+<tr>
+<th>Offset</th>
+<th>Field</th>
+<th>Value</th>
+<th>Length</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Encryption Algorithm NID</td>
+<td>uint16</td>
+<td>2</td>
+<td>The NID (numeric identifier) of the algorithm used to encrypt this subfile. By default, Panda3D encrypts all subfiles using the Blowfish algorithm in CBC mode (bf-cbc), which has an NID of 91. NIDs are specific to OpenSSL, and may be converted to an ASN1 object using the <code>OBJ_nid2obj</code> function in OpenSSL.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Key Length</td>
+<td>uint16</td>
+<td>2</td>
+<td>The key length of the encryption key that is derived from the encryption password. By default, this is 16, meaning that Panda3D encrypts subfiles using 16 byte long keys.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Key Iteration Count</td>
+<td>uint16</td>
+<td>2</td>
+<td>The number of times that the password is hashed to generate the key when encrypting, divided by 1000. For example, if this value is 10, then the password is hashed 10000 times to generate the key. A value of 0 means that the password is only hashed once. The higher this value is, the more time it takes to brute force the password.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Encryption Magic</td>
+<td>char[6]</td>
+<td>crypty</td>
+<td>The first block of the encrypted data begins with the string literal: <code>crypty</code>. We can use this string literal to test if our decryption succeeded. If we decrypt an encrypted subfile, and it begins with the string literal <code>crypty</code>, then that means our password can be considered correct.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Encrypted Data</td>
+<td>char[n]</td>
+<td>n</td>
+<td>The continuation of the encrypted data block stream. To an outsider, this just looks like a random stream of bytes. However, decrypting the encrypted data allows us to peek inside the subfile.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verifying-passwords">Verifying passwords</h2>
+<p>Let&rsquo;s assume that we have an encrypted phase file alongside a potential password. How do we know if that password is correct? How do we know if that password can unlock the given multifile?</p>
+<p>The easiest way is to try to decrypt the multifile using the <code>multify.exe</code> tool:</p>
+<figure>
+    <img src="decrypt_phase_1.png"/> 
+</figure>
+
+<p>Decrypting a phase file with the wrong password will yield an error, but decrypting a phase file with the right password will result in the multifile being extracted to your hard disk.</p>
+<p>The second, more in-depth way to validate an encryption password is to try to decrypt a single subfile from the multifile. After decryption, if the decrypted data begins with the string literal <code>crypty</code>, then the password is correct. If the decrypted data does NOT begin with the string literal <code>crypty</code>, then the password is incorrect.</p>
+<p>Feel free to use the <a class="link" href="https://gist.github.com/darktohka/afee984e1199c2cd62b7bbb8b1fdea47"  target="_blank" rel="noopener"
+    >multifile class I&rsquo;ve created and shared on GitHub</a> to test this behavior:</p>
+<figure>
+    <img src="test_phase_1.png"/> 
+</figure>
+
+<h2 id="panda3d-encryption-demo-sample-program-with-an-encrypted-multifile">Panda3D Encryption Demo: Sample program with an encrypted multifile</h2>
+<p>For the purpose of this article, we&rsquo;ll be using the following sample program, which includes a single encrypted multifile: <code>phase_1.ef</code>.</p>
+<figure>
+    <img src="sample_program.png"
+         alt="Panda3D Encryption Demo - phase_1.ef"/> <figcaption>
+            <p>Panda3D Encryption Demo - phase_1.ef</p>
+        </figcaption>
+</figure>
+
+<p>The source code is available on <a class="link" href="https://github.com/darktohka/panda3d-encryption-demo"  target="_blank" rel="noopener"
+    >GitHub</a>. Please download the <a class="link" href="https://github.com/darktohka/panda3d-encryption-demo/releases/latest"  target="_blank" rel="noopener"
+    >built sample program from the latest GitHub release page</a>. Extract <code>encryption-1.0.1_win_amd64.zip</code>, and run <code>encryption.exe</code> to start the sample.</p>
+<p>Your task is the following: Find out the password that was used to encrypt <code>phase_1.ef</code>, and decrypt the multifile! There&rsquo;s an input box you can use to check whether your guess is correct or not.</p>
+<p>Obviously, if you&rsquo;re just trying to guess the password&hellip; well, see you in two hundred years! We&rsquo;re going to be taking a more sensible approach.</p>
+<p>Keep in mind that our sample program was compiled using <strong>MSVC 2019</strong> <em>(Visual Studio 2019)</em>, targeting the x64 architecture! Some of the offsets used in the last part of this article are specific to this compiler and architecture, and will not work on applications that use an older compiler or a different architecture. It is up to you, the reader, to port these offsets over to your target environment.</p>
+<h2 id="finding-the-encryption-password-setter-function-with-ida-pro">Finding the encryption password setter function with IDA Pro</h2>
+<p>As mentioned before, we can attempt to perform <em>static analysis</em> on the binary. However, <code>encryption.exe</code> is not the only binary present in the extracted folder. In fact, <code>encryption.exe</code> is just responsible for wrapping the Python and Panda3D runtimes.</p>
+<p>We&rsquo;d like to analyze the library that actually contains the code responsible for setting the encryption password. Let&rsquo;s take a look at <a class="link" href="https://github.com/panda3d/panda3d/blob/06921aba93bc7a573a471dbea3aa3f598beb45ed/panda/src/express/multifile.I#L147"  target="_blank" rel="noopener"
+    >the source code for <code>set_encryption_password</code></a> first:</p>
+<div class="highlight"><pre class="chroma"><code class="language-cpp" data-lang="cpp"><span class="n">INLINE</span> <span class="kt">void</span> <span class="n">Multifile</span><span class="o">::</span>
+<span class="n">set_encryption_password</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">encryption_password</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">_encryption_password</span> <span class="o">!=</span> <span class="n">encryption_password</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">_new_subfiles</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">flush</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">_encryption_password</span> <span class="o">=</span> <span class="n">encryption_password</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p>This tells us a few things about the <code>set_encryption_password</code> method. First of all, it&rsquo;s an <code>INLINE</code> function. This means that, when it&rsquo;s compiled to machine code, it will not have its own function. Rather, it will be directly built into any function that calls it. This makes things more complicated for us, because we can&rsquo;t just simply <em>find the <code>set_encryption_password</code> method inside the binary</em>. There&rsquo;s no <em>one singular method</em> built into the binaries for setting the password. Rather, we&rsquo;ll need to find <strong>all</strong> the different instances that <code>set_encryption_password</code> is called in. Or, at least, we need to find the instances that actually matter for us. Secondly, it would be difficult to find this method if all it did was set a string in memory. <strong>But it also calls the <code>Multifile::flush()</code> method if the new subfile list is empty.</strong> This is easy to look out for, so finding the method will be way easier if we mainly look for calls to the <code>flush</code> method.</p>
+<p><strong>What we&rsquo;re most interested in are the Python -&gt; C++ bindings.</strong> Panda3D&rsquo;s Interrogate system automatically generates Python bindings for all C++ methods that are published. And <code>set_encryption_password</code> just so happens to be published! In fact, our sample program even calls it. That&rsquo;s how it sets the encryption password for the <code>phase_1.ef</code> file. Let&rsquo;s take a look at the automatically generated Python bindings for <code>set_encryption_password</code> in <code>libp3express_igate.cxx</code>! Most likely, we will be able to intercept this method to figure out the encryption password.</p>
+<div class="highlight"><pre class="chroma"><code class="language-cpp" data-lang="cpp"><span class="cm">/**
+</span><span class="cm"> * Python function wrapper for:
+</span><span class="cm"> * inline void Multifile::set_encryption_password(std::string const &amp;encryption_password)
+</span><span class="cm"> */</span>
+<span class="k">static</span> <span class="n">PyObject</span> <span class="o">*</span><span class="nf">Dtool_Multifile_set_encryption_password_494</span><span class="p">(</span><span class="n">PyObject</span> <span class="o">*</span><span class="n">self</span><span class="p">,</span> <span class="n">PyObject</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Multifile</span> <span class="o">*</span><span class="n">local_this</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">Dtool_Call_ExtractThisPointer_NonConst</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">Dtool_Multifile</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span><span class="o">&amp;</span><span class="n">local_this</span><span class="p">,</span> <span class="s">&#34;Multifile.set_encryption_password&#34;</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="n">Py_ssize_t</span> <span class="n">param1_len</span><span class="p">;</span>
+  <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">param1_str</span> <span class="o">=</span> <span class="n">PyUnicode_AsUTF8AndSize</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">param1_len</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">param1_str</span> <span class="o">!=</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">((</span><span class="o">*</span><span class="n">local_this</span><span class="p">).</span><span class="n">set_encryption_password</span><span class="p">)(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="n">param1_str</span><span class="p">,</span> <span class="n">param1_len</span><span class="p">));</span>
+    <span class="k">return</span> <span class="n">Dtool_Return_None</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">_PyErr_OCCURRED</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Dtool_Raise_BadArgumentsError</span><span class="p">(</span>
+      <span class="s">&#34;set_encryption_password(const Multifile self, str encryption_password)</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p><strong>JACKPOT!</strong> We have a string literal. <code>Multifile.set_encryption_password</code>. <strong>String literals are the easiest way to find a specific function, as you can just follow its cross-references in the machine code.</strong> Let&rsquo;s open up IDA Pro, and start disasembling <code>panda3d.core.pyd</code>, the Python -&gt; C++ bindings for <code>panda3d.core</code>, the package containing the <code>Multifile</code> class. Open up the <code>Strings window</code> in IDA Pro using <code>Shift+F12</code> and search for our string literal, <code>Multifile.set_encryption_password</code>!</p>
+<figure>
+    <img src="ida_strings.png"
+         alt="The multifile string literal, found in the sample binary"/> <figcaption>
+            <p>The multifile string literal, found in the sample binary</p>
+        </figcaption>
+</figure>
+
+<p>Double click on the string literal. This will open up the <code>IDA View-A</code> tab. Right click on the <code>aMultifileSetEn_0</code> label, and press <strong>List cross references to&hellip;</strong></p>
+<figure>
+    <img src="ida_xrefs.png"
+         alt="IDA lists all the references to this string literal."/> <figcaption>
+            <p>IDA lists all the references to this string literal.</p>
+        </figcaption>
+</figure>
+
+<p>The only reference is our target function. Double click on the cross-reference. This will bring you to the graph that describes the execution flow of the function:</p>
+<figure>
+    <img src="ida_graph.png"
+         alt="This is the function we&amp;rsquo;ve been looking for!"/> <figcaption>
+            <p>This is the function we&rsquo;ve been looking for!</p>
+        </figcaption>
+</figure>
+
+<p>Press <strong>F5</strong> to begin decompiling the function to pseudocode:</p>
+<figure>
+    <img src="ida_pseudocode.png"
+         alt="The disassembled pseudocode. Here is the function that sets the encryption password in the memory!"/> <figcaption>
+            <p>The disassembled pseudocode. Here is the function that sets the encryption password in the memory!</p>
+        </figcaption>
+</figure>
+
+<p>Now that we know exactly where the method that sets the encryption password is, we could do many interesting things. For instance, we could search for some unused bytes in the binary to insert a codecave at, so that we could create a relative jump from the original set_encryption_password to our codecave, and, for example, execute <code>printf</code> on <code>v4 + 45</code> inside the codecave before jumping back to the original function. Or, we could use a debugger to create a breakpoint at this point of the execution, and extract the value of <code>v4 + 45</code>. However, these approaches are all dependent on the game binary itself (there may also be anti-debugger checks present in a binary), and as such, we will instead explore a game binary independent method to extract encrypted multifile phase files: <strong>memory scanning</strong>.</p>
+<h2 id="memory-scanning-as-a-means-to-extract-multifile-passwords">Memory scanning as a means to extract multifile passwords</h2>
+<p>Memory scanning is an interesting technique, first popularized by the ubiquitous Cheat Engine. Cheat Engine enables any user to inspect values inside a process&rsquo;s memory. After inspecting the process&rsquo;s memory, you can choose which bytes to edit and/or freeze.<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup> Cheat Engine was revolutionary because it came with an easy-to-use graphical user interface. As such, the barrier to entry to memory scanning was turned next to minimal.</p>
+<p>Memory scanning is a technique that explores the memory of a given process. By scanning memory, you are looking for certain values of interest in the process memory. In our case, we want to find multifile passwords in the memory. Unfortunately for us, passwords may appear anywhere in the memory of the application. It&rsquo;s not even guaranteed to be an ASCII human readable string: OpenSSL accepts even byte-strings for password derivation.</p>
+<p>So, instead of outright looking for multifile passwords, we should look for <strong>multifile objects</strong> in the memory. After all, if we find a multifile object in the memory, we can easily figure out exactly where it stores its password. In the end, the best approach is to work backwards: if we can find the multifile&rsquo;s name (a well-known value) in the memory, we can then figure out where its multifile object is stored. After we find its multifile object, we can then easily read the encryption password associated with the multifile.</p>
+<h3 id="what-is-memory">What is memory?</h3>
+<p>Memory is one of the most important components in your computer. RAM gives applications a place to store and access data on a short-term basis. Furthermore, it also gives application a place to save their executable code for their lifetime, preventing the computer from thrashing the hard disk just to execute a simple application.</p>
+<p>The memory contains everything that an application needs for its calculations. Naturally, this includes the encryption passwords for all currently loaded encrypted multifiles. This turns the memory into a very appetizing target for us, as we would like to learn how to extract these passwords from the application, hopefully without having to reverse engineer the application itself.</p>
+<p>Memory can be addressed using either 4 or 8 byte long numbers. Usually, these numbers are in hexadecimal format. On a 32-bit architecture, memory is addressed using 4 byte numbers, and on a 64-bit architecture, memory is addressed using 8 byte numbers. Our sample application is built for a 64-bit architecture (x64), so we&rsquo;ll be using 8 byte long numbers to address our memory.</p>
+<p>The best analogy for addressing memory is the Great Wall of China. Imagine the Great Wall of China.</p>
+<figure>
+    <img src="great_wall_of_china.png"
+         alt="The Great Wall of China, colorized"/> <figcaption>
+            <p>The Great Wall of China, colorized</p>
+        </figcaption>
+</figure>
+
+<p>It is the longest man-made wall ever, with a main length of 3460 kilometers. Imagine that there are guard towers on the Great Wall of China. Each guard tower is numbered, beginning from 1. This is the <strong>memory address</strong>. If you know that a guard tower&rsquo;s index is 26, then you know that <strong>it is the 26th tower</strong>. Each tower contains a guard, with a piece of paper in his pocket. On the piece of paper is always a number from 0 to 255. That number is the value at that specific memory address.</p>
+<p>So if you were to ask: &ldquo;What is the value at memory address 26?&rdquo;, you are basically asking: &ldquo;What&rsquo;s the value on the 26th tower&rsquo;s guard&rsquo;s piece of paper?&rdquo; And the answer to that question is always a number from 0 to 255: a single <strong>byte</strong>.</p>
+<h3 id="what-is-a-pointer">What is a pointer?</h3>
+<p>Pointers sound very confusing at first, but they&rsquo;re actually a quite simple concept. Pointers are simple numbers. They&rsquo;re 4 bytes long on a 32-bit architecture, and 8 bytes long on a 64-bit architecture. Chances are you are using a 64-bit architecture right now. Their name alludes to their true purpose: they <strong>point</strong> to <strong>memory</strong>. Pointers are <strong>memory addresses</strong>. If you have a pointer, you can then head to that <strong>point</strong> in memory and read as much memory as you want from that offset.</p>
+<h3 id="class-memory-layouts-in-c">Class memory layouts in C++</h3>
+<p>Thankfully, instances of all classes in C++ have very well-defined memory layouts. The memory layout is determined by the following:</p>
+<ul>
+<li><strong>The compiler</strong>. MSVC 2017 and MSVC 2019 are ABI compatible with each other, and as such, classes compiled using MSVC 2017 and classes compiled using MSVC 2019 have the same memory layout. However, a class compiled using another compiler, such as Clang, GCC, or MSVC 2015 will have a different memory layout. <strong>We&rsquo;ll be assuming a MSVC 2019 compiler memory layout for all classes from now on.</strong></li>
+<li><strong>The architecture</strong>. x86 and x64 architectures have different pointer type sizes. Certain types, such as <code>std::string</code>, also have different layouts on x86 and x64. <strong>From now on, we&rsquo;ll be assuming a x64 memory layout for all classes.</strong></li>
+<li><strong>The class declaration</strong>. Every class is defined inside a <em>header file</em> (<code>*.h</code>). The order of the class members, as well as the sizes of the class members dictate the memory layout of the class. If you swap a class member with another, their actual positions in memory are switched after compilation. We know the memory layout of the Multifile class because Panda3D&rsquo;s source code is completely open source.</li>
+</ul>
+<p>To understand exactly how memory layouts work, and to find out exactly how to determine the exact memory layout of a C++ class, we are going to create our own C++ class and try to figure out its memory layout.</p>
+<p>Consider the following C++ code (mixed with C code, in order to reduce the amount of included classes for the purpose of this article):</p>
+<div class="highlight"><pre class="chroma"><code class="language-cpp" data-lang="cpp"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span><span class="cp"></span>
+<span class="k">class</span> <span class="nc">TestClass</span> <span class="p">{</span>
+
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">int</span> <span class="n">first</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">second</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">third</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">TestClass</span> <span class="o">*</span><span class="n">test</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TestClass</span><span class="p">;</span>
+    <span class="n">test</span><span class="o">-&gt;</span><span class="n">first</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">test</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">test</span><span class="o">-&gt;</span><span class="n">third</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Size of TestClass instance: %llu</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">test</span><span class="p">));</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;TestClass memory:</span><span class="se">\n\n</span><span class="s">&#34;</span><span class="p">);</span>
+
+    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">memory</span> <span class="o">=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="n">test</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">test</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%u &#34;</span><span class="p">,</span> <span class="n">memory</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p>Save the code provided above as <code>classTest.cxx</code>. Note how our new custom class is called <code>TestClass</code>, and it has three class members: <code>first</code>, <code>second</code> and <code>third</code>, all three being <code>int</code> types (4 byte numbers). The <code>first</code> class member will be set to <code>4</code>, the <code>second</code> to <code>2</code>, and the <code>third</code> to <code>9</code>.</p>
+<p>Open your <code>x64 Native Tools Command Prompt for VS 2019</code>, and compile <code>classTest.cxx</code> with the following command:</p>
+<p><code>cl /d1reportAllClassLayout classTest.cxx</code></p>
+<p>Note that we&rsquo;re using the <code>/d1reportAllClassLayout</code> command line option of <code>cl.exe</code>, the official Microsoft Visual C++ compiler. This is an <em>undocumented feature</em> of the Visual C++ compiler front-end, meaning that it is not supported, and not advertised by Microsoft in any way or capacity.<sup id="fnref:8"><a href="#fn:8" class="footnote-ref" role="doc-noteref">8</a></sup> Regardless, it is <strong>very</strong> useful for engineers who work with memory dumps on a daily basis, as using this command line option allows you to see the entire memory layout of all classes encountered during compilation.</p>
+<p>Not only will <code>cl</code> compile our program into an executable called <code>classText.exe</code>, but it will also share with us the <strong>memory layout of TestClass, our custom class</strong>:</p>
+<pre><code>class TestClass size(12):
+        +---
+ 0      | first
+ 4      | second
+ 8      | third
+        +---
+</code></pre><p>Wow! Is it really that simple? Yes, it is. More complicated classes will have automatic alignment adjustments, but that is of little concern to us: the important bits are the <strong>offsets</strong>, the numbers that appear in the first column of the memory layout.</p>
+<p>For example, if you know that a class begins at, for example, 0x00005210 in your memory, and you want to read the memory of the class member named <code>second</code>, then first, you&rsquo;ll need to begin at the memory address 0x00005210, skip 4 bytes (equal to the <em>offset</em> of <code>second</code>) to 0x00005214, and read 4 bytes at that address (equal to the <em>size</em> of <code>second</code>, which is an int, a 4 byte number).</p>
+<p>Since our class instance is allocated using the <code>new</code> operator, the class instance is saved in the <code>heap</code>, a special area of the memory dedicated to long-living objects. It is <strong>not lost</strong> when the function that created the class instance ends. Multifiles are allocated in Panda3D in exactly the same way, so our access to this data is guaranteed.</p>
+<p>Run <code>classText.exe</code> in your Command Prompt for the following output:</p>
+<pre><code>Size of TestClass instance: 12
+TestClass memory:
+
+4 0 0 0 2 0 0 0 9 0 0 0
+</code></pre><p>This means that our compiler was right: TestClass&rsquo;s size is indeed 12, the first 4 bytes are used by the class member named <code>first</code> (set to 4), the second 4 bytes are used by the class member named <code>second</code> (set to 2), and the last 4 bytes are used by the class member named <code>third</code> (set to 9).</p>
+<h3 id="stdstring-internals">std::string internals</h3>
+<p>Before we go any further, we must talk about <code>std::string</code>. This container is going to be crucial to our research from now on. Each <code>std::string</code> stores characters. For example, if you want to represent the following text: <em>&ldquo;I love my internet friends&rdquo;</em>, you would need to store this data in an <code>std::string</code>.</p>
+<p>An <code>std::string</code> is a data container that always takes up <code>32</code> bytes of memory in our MSVC 2019 x64 environment. But how come it always takes up <strong>32</strong> bytes of memory? <em>&ldquo;I love my internet friends&rdquo;</em> should only be 26 bytes long, no? What if I want to store something longer, like <em>&ldquo;Great expectations of sun rays and bright days&rdquo;</em>? That is 46 bytes long, how come it fits in a <code>32</code> byte long container?</p>
+<p><strong>It turns out that <code>std::string</code> is a very clever data container. <em>It acts differently based on how long your string is.</em></strong></p>
+<p><strong>If your <code>std::string</code> is shorter than or equal to 16 characters, then the first 16 characters are used to store the string <em>as-is</em>, while index 16 to index 24 is used to store a 8 byte long length.</strong> This is called Small String Optimization, and is yet another undocumented MSVC feature. All compilers implement some sort of Small String Optimization, but these implementations differ between compilers. There is almost no information on MSVC&rsquo;s SSO on the internet, but it&rsquo;s fairly easy to figure the format out.</p>
+<p>For example, let&rsquo;s encode the following string: <code>Blood of Villain</code>. Encoded as <code>std::string</code>, <code>Blood of Villain</code> manifests in the memory as such:</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+<th>13</th>
+<th>14</th>
+<th>15</th>
+<th>16</th>
+<th>17</th>
+<th>18</th>
+<th>19</th>
+<th>20&hellip;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B</td>
+<td>l</td>
+<td>o</td>
+<td>o</td>
+<td>d</td>
+<td></td>
+<td>o</td>
+<td>f</td>
+<td></td>
+<td>V</td>
+<td>i</td>
+<td>l</td>
+<td>l</td>
+<td>a</td>
+<td>i</td>
+<td>n</td>
+<td>0x10</td>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x00</td>
+</tr>
+</tbody>
+</table>
+<p>The first 16 characters are used to store the string, while the bytes from <code>16</code> to <code>24</code> are used to store the length, which is simply <code>0x10</code>, or <code>16</code> in this case.</p>
+<p><strong>HOWEVER, if your <code>std::string</code> is longer than 16 characters, then the first 8 characters are used to store a pointer to the actual string data. Your ACTUAL string data will be saved elsewhere in the memory. The length of the string is still saved between the 16th and 24th indices.</strong></p>
+<p>What happens if we encode the following string: <code>We are long strings</code>? Our <code>std::string</code> might look something like this:</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>&hellip;</th>
+<th>16</th>
+<th>17</th>
+<th>18</th>
+<th>19</th>
+<th>20&hellip;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x43</td>
+<td>0x50</td>
+<td>0xAB</td>
+<td>0xEF</td>
+<td>&hellip;</td>
+<td>0x13</td>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x00</td>
+<td>0x00</td>
+</tr>
+</tbody>
+</table>
+<p>You might&rsquo;ve noticed that the first 16 characters no longer represent ASCII data. In fact, the first 8 bytes constitute a pointer. Let&rsquo;s head to <code>0x000000004350ABEF</code>, the 64-bit memory address encoded in the first 8 bytes of this <code>std::string</code>, and read <code>0x13</code> characters (19 characters, equal to the length of <code>We are long strings</code>.) The exact value at this address is <code>We are long strings</code>!</p>
+<h3 id="the-multifile-memory-layout">The Multifile memory layout</h3>
+<p>Now that we&rsquo;ve learned how to figure out a class&rsquo;s memory layout, let&rsquo;s use our newfound knowledge on the <code>multifile.cxx</code> file. Our target is the <code>Multifile</code> class! Execute the following command in <code>panda3d/panda/src/express</code>:</p>
+<p><code>cl /d1reportAllClassLayout multifile.cxx -I../../../built_x64/include &gt; classes.txt</code></p>
+<p>This will save a LOT of class layouts to a file called <code>classes.txt</code>. Open <code>classes.txt</code> and search for <code>class Multifile size</code>.</p>
+<h4 id="multifile-layout">Multifile layout</h4>
+<pre><code>class Multifile	size(1704):
+	+---
+ 0	| +--- (base class ReferenceCount)
+ 0	| | {vfptr}
+ 8	| | +--- (base class MemoryBase)
+	| | +---
+ 8	| | _ref_count
+16	| | _weak_list
+	| +---
+24	| ?$ov_set@PEAVSubfile@Multifile@@V?$IndirectLess@VSubfile@Multifile@@@@V?$pvector@PEAVSubfile@Multifile@@@@ _subfiles
+64	| ?$pvector@PEAVSubfile@Multifile@@ _new_subfiles
+96	| ?$pvector@PEAVSubfile@Multifile@@ _removed_subfiles
+128	| ?$pvector@PEAVSubfile@Multifile@@ _cert_special
+160	| ?$pvector@V?$pvector@VCertRecord@Multifile@@@@ _signatures
+192	| ?$fpos@U_Mbstatet@@ _offset
+216	| _read
+224	| _write
+232	| _owns_stream
+  	| &lt;alignment member&gt; (size=7)
+240	| ?$fpos@U_Mbstatet@@ _next_index
+264	| ?$fpos@U_Mbstatet@@ _last_index
+288	| ?$fpos@U_Mbstatet@@ _last_data_byte
+312	| _needs_repack
+  	| &lt;alignment member&gt; (size=7)
+320	| _timestamp
+328	| _timestamp_dirty
+329	| _record_timestamp
+  	| &lt;alignment member&gt; (size=6)
+336	| _scale_factor
+344	| _new_scale_factor
+352	| _encryption_flag
+  	| &lt;alignment member&gt; (size=7)
+360	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_password
+392	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_algorithm
+424	| _encryption_key_length
+428	| _encryption_iteration_count
+432	| IFileStream _read_file
+768	| IStreamWrapper _read_filew
+816	| OFileStream _write_file
+1144	| FileStream _read_write_file
+1488	| StreamWrapper _read_write_filew
+1576	| Filename _multifile_name
+1664	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _header_prefix
+1696	| _file_major_ver
+1700	| _file_minor_ver
+	+---
+</code></pre><p>This is the <strong>Multifile</strong> class layout on <strong>MSVC 2019, x64 architecture</strong> as of Feb 27, 2021.</p>
+<h4 id="filename-layout">Filename layout</h4>
+<pre><code>class Filename	size(88):
+	+---
+ 0	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _filename
+32	| _dirname_end
+40	| _basename_start
+48	| _basename_end
+56	| _extension_start
+64	| _hash_start
+72	| _hash_end
+80	| _flags
+  	| &lt;alignment member&gt; (size=4)
+	+---
+</code></pre><p>This is the <strong>Filename</strong> class layout on <strong>MSVC 2019, x64 architecture</strong> as of Feb 27, 2021.</p>
+<h3 id="proposed-angle-of-approach">Proposed angle of approach</h3>
+<p>Our goal is to extract the password of <code>phase_1.ef</code> from the memory of our sample project. We&rsquo;re going to be employing memory scanning, following these steps:</p>
+<h4 id="step-one-search-for-all-instances-of-phase_1ef-in-the-memory">Step one: Search for all instances of phase_1.ef in the memory</h4>
+<p>Scanning for all instances of <code>phase_1.ef</code> in our process&rsquo;s memory allows us to find all potential <em>Filenames</em> that might have been allocated as the filename of the mounted multifile.</p>
+<p>Note that figuring out where the phase name is allocated in memory does not give us a direct path to the Multifile object. If our multifile filename is longer than 16 characters, we still need to figure out every single point in memory where a cross-reference appears, thanks to MSVC&rsquo;s Small String Optimization.</p>
+<h4 id="step-two-figure-out-the-beginning-address-of-the-filename">Step two: Figure out the beginning address of the Filename</h4>
+<p>Alright, now we&rsquo;ve found all instances of <code>phase_1.ef</code> in our memory. Let&rsquo;s try each one of them individually.</p>
+<p>Chances are, however, that the multifile&rsquo;s full filename is NOT just <code>phase_1.ef</code>! If the multifiles are stored in a different folder, for example in a folder named <code>resources/phase_1.ef</code>, then we need to find <strong>the entire filename as stored in memory</strong>.</p>
+<p>To accomplish this, we&rsquo;ll be peeking <strong>behind</strong> and <strong>ahead of</strong> the string that we&rsquo;ve just found. 128 bytes should be enough of a peek window. If we read 128 bytes before <code>phase_1.ef</code> in memory, then we&rsquo;ll also read the <code>resources/</code> portion. After that, we just need to run a simple trimming algorithm: beginning from <code>phase_1.ef</code>, walk behind the string until you encounter a non-ASCII character. Peeking behind will reveal 50% of the full string: <code>resources/phase_1.ef</code>.</p>
+<p>If we read 128 bytes after <code>phase_1.ef</code> in memory, chances are that we won&rsquo;t find any new characters. But what if we accidentally searched for <code>phase_1.e</code>? Just to be sure, we&rsquo;ll be peeking ahead of the string as well. Similarly to what we&rsquo;ve done just a second ago, walk ahead of the string until you encounter a non-ASCII character. Peeking ahead will reveal the rest of the full string: <code>resources/phase_1.ef</code>, even if you&rsquo;ve been looking for <code>phase_1.e</code> this entire time.</p>
+<p>Now, we have the full string: <code>resources/phase_1.ef</code>. The memory address of the first letter, <code>r</code>, denotes the memory address at which this string was allocated.</p>
+<h4 id="step-three-find-our-multifile-object-in-memory">Step three: Find our Multifile object in memory</h4>
+<p>The next step consists of finding the Multifile object in memory. We&rsquo;ll be using the <code>_multifile_name</code> class member of the <code>Multifile</code> class, as a sort of <strong>gateway</strong> into the Multifile object. If we can find where the <code>Filename</code> that allocated the string we found in <em>step two</em> is, then we&rsquo;ve practically found the Multifile object already.</p>
+<p>There are two cases:</p>
+<ol>
+<li>The string we found in <em>step two</em> is shorter than or equal to 16 characters, and is not subject to Small String Optimization</li>
+<li>The string we found in <em>step two</em> is longer than 16 characters, and is subject to Small String Optimization</li>
+</ol>
+<p>If the string we found is shorter than or equal to 16 characters, then <strong>congratulations!</strong> The address at which the string was allocated <strong>is the same address of the <code>Filename</code> inside the Multifile class, with a relative offset of 1576.</strong></p>
+<p>If the string we found is longer than 16 characters, then we&rsquo;ve surely got our work cut out for us. The address at which the string was allocated is certainly not the address of the <code>Filename</code> object we&rsquo;ve been looking for!</p>
+<p>Search through all memory again for the memory address of the string. <strong>Each cross-reference to the memory address of the string is a potential <code>Filename</code> object inside the Multifile class, with a relative offset of 1576 once again.</strong></p>
+<h4 id="step-four-confirm-that-weve-found-a-multifile-object">Step four: Confirm that we&rsquo;ve found a Multifile object</h4>
+<p>So far, we&rsquo;ve only found <strong>potential Multifile objects.</strong> To make sure that our potential Multifile objects are actual Multifile objects, we should try to identify them somehow. The easiest way would be to check their major and minor versions.</p>
+<p>Currently, Panda3D multifiles are <em>version 1.1.</em> <strong>If a potential Multifile object&rsquo;s version is also <em>1.1.</em>, then it is <em>very likely</em> that we are dealing with an actual Multifile object.</strong></p>
+<p>Since our entry point right now is the <code>Filename</code> object inside the Multifile class, that means that we are at an offset of 1576. The major version is available at an offset of 1696, while the major version is available at an offset at 1700. Simply navigate <code>1696 - 1576 = 120</code> bytes forward in the Multifile, and read 4 bytes for the major, as well as 4 bytes for the minor version. <strong>If both of them are equal to 1, then we are dealing with an actual Multifile object.</strong></p>
+<h4 id="step-five-extract-the-encryption-password-from-the-multifile-object">Step five: Extract the encryption password from the Multifile object</h4>
+<p>We&rsquo;ve found our Multifile object! Our entry point is the <code>Filename</code> object inside the Multifile class: <code>_multifile_name</code>, at an offset of 1576 bytes. Our target is the <code>_encryption_password</code> class field:</p>
+<pre><code>360	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_password
+392	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_algorithm
+</code></pre><p><code>_encryption_password</code> can be found at an offset of 360, so we need to walk <code>1576 - 360 = 1216</code> bytes backwards in order to read the encryption password, encoded as an <code>?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@</code>.</p>
+<p><strong>A what now?!?!</strong></p>
+<p><a class="link" href="https://demangler.com"  target="_blank" rel="noopener"
+    >Let&rsquo;s use an online C++ demangler to figure out what that means.</a> So, apparently that&rsquo;s an <code>std::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt;&gt;</code>. Huh. That&rsquo;s still a weird name. I think <code>std::string</code> sounds nicer!</p>
+<p><a class="link" href="#stdstring-internals" >Recall the structure of std::string objects.</a> The 16th to 24th characters signify the <strong>length</strong> of the <code>std::string</code>. This should be the very first thing we read, as we need to find out if <strong>Small String Optimization</strong> is in play or not.</p>
+<p>If the length of the encryption password is <em>less than or equal to 16</em>, then <strong>that makes things easier!</strong> Just read the string at offset 360, and there you have it: the encryption password, in plain text format.</p>
+<p>However, if the encryption password is <em>longer than 16 characters</em>, then the first 8 bytes encode a pointer pointing to the actual encryption password. Read these 8 bytes as a pointer, head to the memory address encoded by this pointer, and read the string there. <em>The encryption password stares you down.</em></p>
+<p><strong>Victory!!!</strong></p>
+<p>An implementation of this algorithm exists in the <a class="link" href="https://github.com/darktohka/p3dephaser/blob/master/p3dephaser/ScanWorker.py"  target="_blank" rel="noopener"
+    >P3Dephaser GitHub repository</a>. Feel free to peruse the code at your own discretion!</p>
+<h2 id="introducing-p3dephaser-a-gui-application-to-extract-multifile-passwords">Introducing P3Dephaser: A GUI application to extract multifile passwords</h2>
+<p><strong>Panda3D Dephaser is a proof-of-concept GUI application that extracts multifile passwords from any Panda3D game runtime compiled using MSVC 2019 and the x64 architecture.</strong></p>
+<figure>
+    <img src="p3dephaser_main.png"/> 
+</figure>
+
+<p><a class="link" href="https://github.com/darktohka/p3dephaser"  target="_blank" rel="noopener"
+    >The source code of P3Dephaser is available on GitHub for tinkerers and the like.</a></p>
+<p><a class="link" href="https://github.com/darktohka/p3dephaser/releases/latest"  target="_blank" rel="noopener"
+    >End users may download the prebuilt version of P3Dephaser from the GitHub releases page.</a></p>
+<h3 id="how-to-use-p3dephaser">How to use P3Dephaser</h3>
+<p>To demonstrate the usage of P3Dephaser, we&rsquo;ll be using Panda3D Dephaser in tandem with the <a class="link" href="https://github.com/darktohka/panda3d-encryption-demo/releases/latest"  target="_blank" rel="noopener"
+    >Panda3D Encryption Demo</a>.</p>
+<p>Extract the Panda3D Encryption Demo to a new folder and run <code>encryption.exe</code>. The following demo application will boot up:</p>
+<figure>
+    <img src="sample_program.png"
+         alt="The Panda3D Encryption Demo sample program."/> <figcaption>
+            <p>The Panda3D Encryption Demo sample program.</p>
+        </figcaption>
+</figure>
+
+<p>Your task is to guess the password of the encrypted multifile <code>phase_1.ef</code> shipped with the application. Of course, this is a daunting task in and out of itself. <strong>But with P3Dephaser, even this is a simple task.</strong></p>
+<p>Open <code>P3Dephaser.exe</code>. The Panda3D Dephaser will appear. Search for the process named <code>encryption.exe</code> (this is our Panda3D Encryption Demo) and select it with your cursor.</p>
+<p>After choosing the process, you may now proceed to enter the name of the encrypted multifile: <code>phase_1.ef</code></p>
+<p>Press the Scan button, confirm that you are indeed scanning for the right multifile, and press <strong>Yes</strong> to begin the extraction process. It will take a few seconds, but the password will appear in the app&rsquo;s table!</p>
+<figure>
+    <img src="p3dephaser_found.png"
+         alt="The password is easily found by the PoC tool."/> <figcaption>
+            <p>The password is easily found by the PoC tool.</p>
+        </figcaption>
+</figure>
+
+<p>Enter this password into the Panda3D Encryption Demo, and it should bring you to a special screen, meant to be seen by only those who have succeeded in decrypting the demo:</p>
+<figure>
+    <img src="sample_program_done.png"
+         alt="The congratulations screen is blurred for now. You should try the challenge for yourself if you&amp;rsquo;re curious!"/> <figcaption>
+            <p>The congratulations screen is blurred for now. You should try the challenge for yourself if you&rsquo;re curious!</p>
+        </figcaption>
+</figure>
+
+<p>Also decrypt and unpack the encrypted multifile using Panda3D&rsquo;s built-in tools:</p>
+<figure>
+    <img src="sample_program_files.png"
+         alt="The extracted password is the correct password."/> <figcaption>
+            <p>The extracted password is the correct password.</p>
+        </figcaption>
+</figure>
+
+<h2 id="concluding-notes">Concluding notes</h2>
+<p>The multifile format is a really versatile format. Its creation made a lot of games possible. Without the multifile system, Panda3D games most likely wouldn&rsquo;t be doing as well as they are today! Multifiles paved the way for the creation of early MMORPGs, even when their existence was endangered by the then-slow Internet.</p>
+<p>However, encrypted multifiles provide a false sense of security to any game developer using them. Encrypted multifiles <strong>can</strong> be decrypted, and they can be decrypted <strong>easily.</strong> All that&rsquo;s necessary to defeat security through obscurity is somebody with the proper knowledge and enough time on their hands.</p>
+<p>Data Structure Layout Randomization is not yet mature enough for actual usage in the field. As of Feb 27, 2021, it only exists in academia.<sup id="fnref:9"><a href="#fn:9" class="footnote-ref" role="doc-noteref">9</a></sup> The usage of DSLR has also failed in real-world use cases. In 2017, the randomization of the <code>task_struct</code> struct layout was recommended by Kees Cook, but the plan eventually fell through.<sup id="fnref:10"><a href="#fn:10" class="footnote-ref" role="doc-noteref">10</a></sup> According to Linus Torvalds, DSLR is simply security theater.<sup id="fnref:11"><a href="#fn:11" class="footnote-ref" role="doc-noteref">11</a></sup> Indeed, in this case, DSLR could be defeated by simply checking each possible offset. This would barely introduce any substantial complexity to the proposed algorithm.</p>
+<p>Address Space Layout Randomization, enabled by default on compatible binaries beginning from Windows Vista<sup id="fnref:12"><a href="#fn:12" class="footnote-ref" role="doc-noteref">12</a></sup>, has zero effect on memory scanning.</p>
+<p>The only way to prevent encrypted game assets from being decrypted is to create your own game archive format. Unfortunately, custom archive formats would not play nice with the already existing Panda3D engine. <strong>Large game companies have attempted to create custom, encrypted archive formats before, but even these formats are easily reverse engineered by the community.</strong> Take for example the latest and hottest game: Cyberpunk 2077, for which <a class="link" href="https://github.com/WolvenKit/Wolvenkit"  target="_blank" rel="noopener"
+    >modding tools capable of archive editing already exist</a>.</p>
+<p>It&rsquo;s best to just accept that your game assets will eventually be accessed by someone, even if you don&rsquo;t exactly want them to. Accepting this fact opens the gateway to productive creative work by the community, which creates free advertising for your game. <strong>The creative community around a game is often more implicated in keeping the game alive and flourishing than the actual creators.</strong></p>
+<p>I hope you enjoyed reading this article. I am confident that anyone who has read this article will walk away a little bit smarter, mainly more educated about file formats, C++ classes, reverse engineering and memory scanning.</p>
+<p>If you have any questions or suggestions about this article, please feel free to reach out to me on Discord: <code>Disyer#2168</code>. Feedback is greatly appreciated!</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p><a class="link" href="https://github.com/panda3d/panda3d/blob/2fd714e52fc41e38f23d4f50078e192f3fc3b9d5/panda/src/express/multifile.cxx#L2"  target="_blank" rel="noopener"
+    >Mike Goslin, Earliest version of Panda3D&rsquo;s multifile.cxx class, line. 2, 2000.</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p><a class="link" href="https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=1350741"  target="_blank" rel="noopener"
+    >Mike Goslin and Mark R. Mine, &ldquo;The Panda3D graphics engine&rdquo;, Computer, vol. 37, no. 10, pp. 112-114, 2004.</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3" role="doc-endnote">
+<p><a class="link" href="https://www.researchgate.net/publication/220686234_Building_a_massively_multiplayer_game_for_the_million_Disney%27s_Toontown_Online"  target="_blank" rel="noopener"
+    >Mark R. Mine, Joe Shochet and Roger Hughston, &ldquo;Building a massively multiplayer game for the million: Disney&rsquo;s Toontown Online&rdquo;, pp. 15, 2003.</a> <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4" role="doc-endnote">
+<p><a class="link" href="https://eu.battle.net/support/en/article/76459"  target="_blank" rel="noopener"
+    >Blizzard, World of Warcraft System Requirements, 2021.</a> <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5" role="doc-endnote">
+<p><a class="link" href="https://docs.panda3d.org/1.10/python/programming/advanced-loading/multifiles"  target="_blank" rel="noopener"
+    >Panda3D Wiki, Multifiles, 2021.</a> <a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6" role="doc-endnote">
+<p><a class="link" href="https://github.com/panda3d/panda3d/blob/fb9b334d58a6ff6b900f5804aafeae2212c8b339/dtool/src/prc/encryptStreamBuf.cxx#L121"  target="_blank" rel="noopener"
+    >David Rose, Panda3D&rsquo;s encryptStreamBuf.cxx class, line. 121-123, 2021.</a> <a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:7" role="doc-endnote">
+<p><a class="link" href="https://www.online-sciences.com/games/cheat-engine-features-advantages-and-disadvantages"  target="_blank" rel="noopener"
+    >Heba Soffar, &ldquo;Cheat engine features, advantages and disadvantages&rdquo;, 2019.</a> <a href="#fnref:7" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:8" role="doc-endnote">
+<p><a class="link" href="https://devblogs.microsoft.com/cppblog/diagnosing-hidden-odr-violations-in-visual-c-and-fixing-lnk2022"  target="_blank" rel="noopener"
+    >Andy Rich, &ldquo;Diagnosing Hidden ODR Violations in Visual C++&rdquo;, Microsoft Devblogs, 2007.</a> <a href="#fnref:8" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:9" role="doc-endnote">
+<p><a class="link" href="https://link.springer.com/chapter/10.1007/978-3-319-24174-6_4"  target="_blank" rel="noopener"
+    >Chen, P., Xu, J., Lin, Z., Xu, D., Mao, B., Liu, P., &ldquo;A Practical Approach for Adaptive Data Structure Layout Randomization&rdquo;, ESORICS, 2015.</a> <a href="#fnref:9" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:10" role="doc-endnote">
+<p><a class="link" href="https://lwn.net/Articles/722293"  target="_blank" rel="noopener"
+    >Nur Hussein, &ldquo;Randomizing structure layout&rdquo;, LWN.net, 2017.</a> <a href="#fnref:10" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:11" role="doc-endnote">
+<p><a class="link" href="https://marc.info/?l=linux-kernel&amp;m=149083181100577&amp;w=2"  target="_blank" rel="noopener"
+    >Linus Torvalds, &ldquo;x86/fpu: move FPU state into separate cache&rdquo;, Linux Kernel Mailing List, 2017.</a> <a href="#fnref:11" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:12" role="doc-endnote">
+<p><a class="link" href="https://docs.microsoft.com/en-us/previous-versions/bb430720%28v=msdn.10%29"  target="_blank" rel="noopener"
+    >Michael Howard, Matt Miller, John Lambert and Matt Thomlinson, &ldquo;Windows ISV Software Security Defenses&rdquo;, Microsoft Docs, 2010.</a> <a href="#fnref:12" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/reverse-engineering/">reverse-engineering</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2021 Daniel&#39;s Blog
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.2.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer="true"
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer="true"
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css"integrity="sha256-c0uckgykQ9v5k&#43;IqViZOZKc47Jn7KQil4/MP3ySA3F8="crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css"integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE="crossorigin="anonymous"
+            >
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g="crossorigin="anonymous"
+                defer="false"
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
