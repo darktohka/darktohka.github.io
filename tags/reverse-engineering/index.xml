@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>reverse-engineering on Daniel&#39;s Blog</title>
+    <link>https://tohka.us/tags/reverse-engineering/</link>
+    <description>Recent content in reverse-engineering on Daniel&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 27 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://tohka.us/tags/reverse-engineering/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Exploring Encrypted Multifiles: A Technical Overview</title>
+      <link>https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/</link>
+      <pubDate>Sat, 27 Feb 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/</guid>
+      <description>Not interested in the various technical tidbits? Skip to the end-user demo at the end of the article!
+Table of Contents Resources Preface: Let&amp;rsquo;s talk about multifiles The brief history of multifiles A deep dive into the multifile format  Our test subject The overall format Component 1: The multifile header Component 2: A typical subfile index entry  Linked lists, explained Reading our first subfile index entry Subfile flags Reading our second subfile index entry But can we go beyond?</description>
+    </item>
+    
+  </channel>
+</rss>

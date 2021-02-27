@@ -1,0 +1,1097 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Daniel&#39;s Blog</title>
+        <link>https://tohka.us/</link>
+        <description>Recent content on Daniel&#39;s Blog</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Sat, 27 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://tohka.us/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Exploring Encrypted Multifiles: A Technical Overview</title>
+        <link>https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/</link>
+        <pubDate>Sat, 27 Feb 2021 00:00:00 +0000</pubDate>
+        
+        <guid>https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/</guid>
+        <description>&lt;img src="https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/persona.png" alt="Featured image of post Exploring Encrypted Multifiles: A Technical Overview" /&gt;&lt;p&gt;&lt;strong&gt;Not interested in the various technical tidbits? &lt;a class=&#34;link&#34; href=&#34;#introducing-p3dephaser-a-gui-application-to-extract-multifile-passwords&#34; &gt;Skip to the end-user demo at the end of the article!&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;h1&gt;Table of Contents&lt;/h1&gt;
+&lt;b&gt;&lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#resources&#34;&gt;Resources&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#preface-lets-talk-about-multifiles&#34;&gt;Preface: Let&amp;rsquo;s talk about multifiles&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#the-brief-history-of-multifiles&#34;&gt;The brief history of multifiles&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#a-deep-dive-into-the-multifile-format&#34;&gt;A deep dive into the multifile format&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#our-test-subject&#34;&gt;Our test subject&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#the-overall-format&#34;&gt;The overall format&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#component-1-the-multifile-header&#34;&gt;Component 1: The multifile header&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#component-2-a-typical-subfile-index-entry&#34;&gt;Component 2: A typical subfile index entry&lt;/a&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href=&#34;#linked-lists-explained&#34;&gt;Linked lists, explained&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#reading-our-first-subfile-index-entry&#34;&gt;Reading our first subfile index entry&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#subfile-flags&#34;&gt;Subfile flags&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#reading-our-second-subfile-index-entry&#34;&gt;Reading our second subfile index entry&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#but-can-we-go-beyond&#34;&gt;But can we go beyond?&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#component-3-subfile-data&#34;&gt;Component 3: Subfile data&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#about-encrypted-multifiles&#34;&gt;About encrypted multifiles&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#why-encrypt-multifiles&#34;&gt;Why encrypt multifiles?&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#preventing-exploits&#34;&gt;Preventing exploits&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#hiding-unreleased-features&#34;&gt;Hiding unreleased features&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#preventing-unauthorized-usage-of-game-assets&#34;&gt;Preventing unauthorized usage of game assets&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#characteristics-of-encrypted-subfiles&#34;&gt;Characteristics of encrypted subfiles&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#the-encryption-header&#34;&gt;The encryption header&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#verifying-passwords&#34;&gt;Verifying passwords&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#panda3d-encryption-demo-sample-program-with-an-encrypted-multifile&#34;&gt;Panda3D Encryption Demo: Sample program with an encrypted multifile&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#finding-the-encryption-password-setter-function-with-ida-pro&#34;&gt;Finding the encryption password setter function with IDA Pro&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#memory-scanning-as-a-means-to-extract-multifile-passwords&#34;&gt;Memory scanning as a means to extract multifile passwords&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#what-is-memory&#34;&gt;What is memory?&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#what-is-a-pointer&#34;&gt;What is a pointer?&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#class-memory-layouts-in-c&#34;&gt;Class memory layouts in C++&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#stdstring-internals&#34;&gt;std::string internals&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#the-multifile-memory-layout&#34;&gt;The Multifile memory layout&lt;/a&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href=&#34;#multifile-layout&#34;&gt;Multifile layout&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#filename-layout&#34;&gt;Filename layout&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#proposed-angle-of-approach&#34;&gt;Proposed angle of approach&lt;/a&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href=&#34;#step-one-search-for-all-instances-of-phase_1ef-in-the-memory&#34;&gt;Step one: Search for all instances of phase_1.ef in the memory&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#step-two-figure-out-the-beginning-address-of-the-filename&#34;&gt;Step two: Figure out the beginning address of the Filename&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#step-three-find-our-multifile-object-in-memory&#34;&gt;Step three: Find our Multifile object in memory&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#step-four-confirm-that-weve-found-a-multifile-object&#34;&gt;Step four: Confirm that we&amp;rsquo;ve found a Multifile object&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#step-five-extract-the-encryption-password-from-the-multifile-object&#34;&gt;Step five: Extract the encryption password from the Multifile object&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#introducing-p3dephaser-a-gui-application-to-extract-multifile-passwords&#34;&gt;Introducing P3Dephaser: A GUI application to extract multifile passwords&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#how-to-use-p3dephaser&#34;&gt;How to use P3Dephaser&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#concluding-notes&#34;&gt;Concluding notes&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;&lt;/b&gt;
+
+&lt;h2 id=&#34;resources&#34;&gt;Resources&lt;/h2&gt;
+&lt;p&gt;The following resources can be used in this article by end-users:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/panda3d-encryption-demo&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Panda3D Encryption Demo - available on GitHub&lt;/a&gt; - &lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/panda3d-encryption-demo/releases/latest&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Download&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/p3dephaser&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;P3Dephaser, a GUI application used to extract multifile passwords - available on GitHub&lt;/a&gt; - &lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/p3dephaser/releases/latest&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Download&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The following resources can be used to follow this article (for enthusiasts and brave folk):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.python.org/downloads/release/python-392&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Python 3.9.2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;The Panda3D source tree&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://visualstudio.microsoft.com/downloads&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Visual Studio 2019&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://gist.github.com/darktohka/afee984e1199c2cd62b7bbb8b1fdea47&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Multifile implementation in Python&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;preface-lets-talk-about-multifiles&#34;&gt;Preface: Let&amp;rsquo;s talk about multifiles&lt;/h2&gt;
+&lt;p&gt;Most people who have played Toontown Online between 2001 and 2013 are very familiar with the concept of multifiles. After all, multifiles allowed players to peek into the art assets of Toontown, all for a noble goal: creating content packs that had the power to modify the visual look, as well as the music of the game.&lt;/p&gt;
+&lt;p&gt;Many texture artists have begun their careers making new texture art for Toontown and its various derivatives. These artists are responsible for creating entire new experiences, transforming the atmosphere and overall feel of the game. Content packs such as &lt;a class=&#34;link&#34; href=&#34;https://uglycorny.net/packs.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Toontown Nightlife&lt;/a&gt; or &lt;a class=&#34;link&#34; href=&#34;https://uglycorny.net/packs.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Toontown at Dusk&lt;/a&gt; are staples of the community and are known by almost all players.&lt;/p&gt;
+&lt;p&gt;What&amp;rsquo;s common between those content packs? They&amp;rsquo;re all packaged and distributed as &lt;strong&gt;multifiles&lt;/strong&gt;. That already gives us an idea as to what multifiles are. Multifiles contain multiple files: but what exactly do they contain? What are these files? Let&amp;rsquo;s take a look.&lt;/p&gt;
+&lt;h2 id=&#34;the-brief-history-of-multifiles&#34;&gt;The brief history of multifiles&lt;/h2&gt;
+&lt;p&gt;Since when exactly are multifiles a thing? Thankfully, the engine that was used to create Toontown is completely open source, and licensed under a fairly permissive license. This engine is called &lt;a class=&#34;link&#34; href=&#34;http://panda3d.org&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Panda3D&lt;/a&gt;, and its source code is currently available on &lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;GitHub&lt;/a&gt;. We may glance at the commit history - i.e. the history of the code&amp;rsquo;s evolution, from the beginning to today - to determine how exactly multifiles were born.&lt;/p&gt;
+&lt;p&gt;The earliest version of the multifile code that we have today dates back to &lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/blob/2fd714e52fc41e38f23d4f50078e192f3fc3b9d5/panda/src/express/multifile.cxx&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Oct 4, 2000&lt;/a&gt;. On Oct 4, 2000 the Panda3D source tree was created, and all of the code that was previously written for the engine was merged into this tree. This is the earliest multifile code that we can find today through public means. This source code is plenty enough for our purposes, however: from it, we can learn that the multifile system began development on &lt;strong&gt;Jan 9, 1997&lt;/strong&gt;, a whopping &lt;strong&gt;24 years ago!&lt;/strong&gt;&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;This multifile system was significantly different from the one we have today: it did not have a versioning system (instead, it solely relied on a well-known, and decided in advance magic number), had a completely different header, and saved &lt;em&gt;memfiles&lt;/em&gt; rather than modern &lt;em&gt;subfiles&lt;/em&gt;, in a format that only looks similar to the modern multifile system we are familiar with today.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Why were multifiles invented in the first place?&lt;/strong&gt; Not many know, but Panda3D used to have a proper acronym back in the day: PANDA used to stand for &lt;strong&gt;Platform-Agnostic, Networked, Display Architecture&lt;/strong&gt;.&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt; Nowadays, this acronym is rarely used, and the current maintainers of the project often stress the obsolete status of the aforementioned acronym. However, let us discuss the relevance of the second attribute: &lt;strong&gt;Networked&lt;/strong&gt;. This attribute is linked to three different functionalities of Panda3D: it refers to the fact that Panda3D can be used in &lt;strong&gt;multi-server rendering workflows&lt;/strong&gt;, the fact that Panda3D can be used to &lt;strong&gt;synchronize client state using the Distributed Object system&lt;/strong&gt;, as well as to the fact that the engine supports &lt;strong&gt;downloading game assets from a central download server&lt;/strong&gt;.&lt;sup id=&#34;fnref:3&#34;&gt;&lt;a href=&#34;#fn:3&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s discuss that last aspect for now. MMORPGs are relatively large games, most often, but not always, larger in scope than other game genres such as FPS games. To provide an example, &lt;em&gt;World of Warcraft&lt;/em&gt;, a popular MMORPG takes up 100 GB of available hard disk space as of Feb 27, 2021.&lt;sup id=&#34;fnref:4&#34;&gt;&lt;a href=&#34;#fn:4&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;4&lt;/a&gt;&lt;/sup&gt; This was especially true in the early 21st century. CDs had merely 700 MBs of available space, and most games that were available to purchase in retail had to make do with that much space. As such, games were often cut back graphically, or shipped with low quality audio to create disk space budget for more important content.&lt;/p&gt;
+&lt;p&gt;But &lt;strong&gt;MMORPGs were different&lt;/strong&gt;. MMORPGs like Toontown Online could not be shipped easily on CDs. An MMORPG cannot exist for long without being updated. If an MMORPG is shipped on a CD, it will quickly become obsolete after being updated. &lt;strong&gt;But how do you update an MMORPG in an age when slow 56k modems reign supreme?&lt;/strong&gt; Disney&amp;rsquo;s engineers took on this fascinating problem.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;They decided to split the entire game world into multiple smaller &lt;em&gt;phases&lt;/em&gt;.&lt;/strong&gt; Each phase allows you to access a more broad subset of the entire game world. For example, &lt;strong&gt;downloading the first two phases&lt;/strong&gt; allows you to start the game binary, &lt;strong&gt;downloading the third phase&lt;/strong&gt; grants you the ability to play through the tutorial of the game, &lt;strong&gt;downloading the fourth phase&lt;/strong&gt; lets you access the first actual game area, and so on. &lt;strong&gt;Downloading all phases&lt;/strong&gt; grants access to the entire game world.&lt;/p&gt;
+&lt;p&gt;How is this useful?&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;For starters&lt;/em&gt;, splitting the game world into smaller files means that your players will only need to download the &lt;strong&gt;first few phases&lt;/strong&gt; in order to &lt;strong&gt;start playing immediately.&lt;/strong&gt; This is a great advantage when you&amp;rsquo;re administrating an MMORPG, as your players may get bored and may never play at all if they have to excruciatingly wait for hours on end just to begin playing.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;Secondly&lt;/em&gt;, having the game loaded so quickly allows you to &lt;em&gt;transparently&lt;/em&gt; download the rest of the game while the player is already engaged with the game.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;Thirdly&lt;/em&gt;, if you make changes to a portion of the game world, you only have to push updates for the &lt;em&gt;relevant portion of the whole game world&lt;/em&gt;. The benefits of this are especially amplified by Panda3D&amp;rsquo;s patch system, which allows each multifile to be patched without redownloading the entire multifile, just the individual changes themselves.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;And last but not least&lt;/em&gt;, having smaller game archives dramatically cuts down on the update time necessary for the player to begin playing after a short absence from the game.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You may have guessed that we aren&amp;rsquo;t talking about this system for no reason. &lt;strong&gt;Multifiles were created in order to facilitate this system.&lt;/strong&gt; All phases are contained within their own &lt;em&gt;multifile&lt;/em&gt;, which contains all of the resources necessary to render a specific subset of the game world.&lt;/p&gt;
+&lt;p&gt;According to the Panda3D wiki:&lt;sup id=&#34;fnref:5&#34;&gt;&lt;a href=&#34;#fn:5&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;5&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A multifile is a file that contains a set of files, similar to a .zip or .rar archive file. They are meant for containing multiple resources such as models, textures, sounds, shaders, and so on, and Panda can load them directly from the multifiles without having to unpack them first. Many games employ a similar concept of &amp;ldquo;data&amp;rdquo; file such as .upk for Unreal Engine and .pak for Quake Engine.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Multifiles are a special file format specific to the Panda3D game engine. They contain game assets, akin to how a ZIP file contains regular files. Multifiles can be easily extracted (and created) using one of Panda3D&amp;rsquo;s built-in tools: &lt;em&gt;multify.exe&lt;/em&gt;. &lt;strong&gt;More details about the &lt;em&gt;multify.exe&lt;/em&gt; utility may be found at the &lt;a class=&#34;link&#34; href=&#34;https://docs.panda3d.org/1.10/python/programming/advanced-loading/multifiles&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Panda3D wiki&lt;/a&gt;.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Since the multifile format&amp;rsquo;s creation in 1997, it has gone through many changes:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/commit/b1dc8b2fa61259095a093dc5d00f8cf274ea74c3&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;On Aug 02, 2002, it was completely rewritten by David Rose.&lt;/a&gt; This new multifile format is close to the format we know today. It introduces &lt;em&gt;subfiles&lt;/em&gt;, subfile flags, version information, and finally allows the deletion of subfiles from a multifile.&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/commit/89528a5fc9e52bda9c95b8fd98168a58f5e08fb1&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Since Aug 04, 2002, subfiles from multifiles can finally be mounted to Panda3D&amp;rsquo;s virtual file system&lt;/a&gt;, allowing game assets to be streamed from a multifile without unpacking first to the hard drive.&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/commit/8d55c759de6e92f9a3d973bc13b976eed3e1496c&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;On Aug 06, 2002, compression support was added, reducing the file size of multifiles even further&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/commit/e51ecacdee7fc47fd5817b85e61b9eb56721d34d&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;On Sep 02, 2002, encrypted subfile support was added to multifiles&lt;/a&gt;. This allows game assets to be encrypted using a password, on an individual basis. We&amp;rsquo;ll be looking at this feature in particular shortly.&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/commit/87a912818b2cbbe9414adad7ab9360235e38f79b&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Since June 09, 2006, timestamps are added to each multifile, and all of its subfiles&lt;/a&gt;. This allows the compilation date of a multifile to be determined.&lt;/li&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/commit/3c0e7016593aa63123286d608d9eee3f7a8c974b&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Since Sep 06, 2009, multifiles may be cryptographically signed&lt;/a&gt;. This prevents tampering by third-party entities, such as hackers trying to exploit a game, by allowing the game developer to &lt;em&gt;sign&lt;/em&gt; all of their game assets, and selectively prevent the game from loading any assets that are not created by the game developers. Before this change, &lt;strong&gt;hackers were known to replace in-game models in order to give themselves an unfair gameplay edge.&lt;/strong&gt; For example, replacing entire race tracks with models that had the finish line at the very beginning of the track allowed hackers to &lt;strong&gt;instantly win any race&lt;/strong&gt;. With signing, developers may require all model files to be signed to prevent any modifications, but may allow unsigned texture or audio changes.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this post, we&amp;rsquo;ll be discussing the technical aspect of the multifile format. We&amp;rsquo;ll also attempt to reverse engineer &lt;em&gt;encrypted&lt;/em&gt; multifiles, in an attempt to demonstrate how, at best, it only serves as &lt;em&gt;security through obscurity&lt;/em&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;a-deep-dive-into-the-multifile-format&#34;&gt;A deep dive into the multifile format&lt;/h2&gt;
+&lt;p&gt;While there is no public information on the multifile format on the Panda3D wiki, we may look to other sources to understand this file format. In particular, David Rose, the engineer responsible for reworking the multifile system in 2002, provides a &lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/blob/e4573ef0fe524d90f1563e8740e932ef7f22cd93/panda/src/express/multifile.cxx#L67&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;lengthy explanation of the format directly in the Panda3D source code&lt;/a&gt;. This documentation is, unfortunately, not exported to the Panda3D manual, but it does reward those who directly read the source code.&lt;/p&gt;
+&lt;p&gt;A multifile is a &lt;strong&gt;binary&lt;/strong&gt; file. It is specifically made for the computer to understand easily, and is not meant to be read by humans. As such, opening a multifile in a text editor, such as Notepad++, will not result in anything human readable.&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;multifile_gibberish.png&#34;
+         alt=&#34;What is THIS supposed to mean?!&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;What is THIS supposed to mean?!&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;In order to try to understand this peculiar format, we&amp;rsquo;ll be using simple tables to try to understand how a typical multifile is packed. Once we understand the layout of a typical multifile, we&amp;rsquo;ll be using &lt;a class=&#34;link&#34; href=&#34;https://www.python.org/downloads/release/python-392&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Python 3.9.2&lt;/a&gt; with Panda3D installed (&lt;code&gt;pip install panda3d&lt;/code&gt;) to read the metadata of a simple multifile with just two subfiles. To make things easier to understand, all offsets will be represented in &lt;em&gt;decimal&lt;/em&gt; format (i.e. regular numbers).&lt;/p&gt;
+&lt;h3 id=&#34;our-test-subject&#34;&gt;Our test subject&lt;/h3&gt;
+&lt;p&gt;Before we begin to disect the multifile format, let&amp;rsquo;s create a new multifile, so that we can try a few things out ourselves.&lt;/p&gt;
+&lt;p&gt;Create a new folder called &lt;code&gt;phase_1&lt;/code&gt;, and create two new files inside this folder: &lt;code&gt;note.txt&lt;/code&gt; and &lt;code&gt;note2.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;note.txt&lt;/code&gt; should contain the following text: &lt;code&gt;Your voice is my voice&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;note2.txt&lt;/code&gt; should contain the following text: &lt;code&gt;Now and forever&lt;/code&gt;&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;phase_1.png&#34;
+         alt=&#34;The structure of our example phase_1 folder&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The structure of our example phase_1 folder&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Open a command prompt in your &lt;code&gt;phase_1&lt;/code&gt; folder, and run the following command:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;multify -c -f phase_1.mf note.txt note2.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;You have successfully created our multifile test subject! &lt;strong&gt;Congratulations!&lt;/strong&gt;&lt;/p&gt;
+&lt;p style=&#34;text-align: center&#34;&gt;&lt;video controls preload=&#34;auto&#34; width=&#34;75%&#34;  autoplay loop muted class=&#34;html-video&#34;&gt;
+    &lt;source src=&#34;https://tohka.us/p/exploring-encrypted-multifiles-a-technical-overview/create_phase_1.mp4&#34; type=&#34;video/mp4&#34; }}&gt;
+&lt;/video&gt;&lt;/p&gt;
+&lt;h3 id=&#34;the-overall-format&#34;&gt;The overall format&lt;/h3&gt;
+&lt;p&gt;Let&amp;rsquo;s begin! Each multifile that has been &lt;strong&gt;properly packed&lt;/strong&gt; will have the following format:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;1&lt;/th&gt;
+&lt;th&gt;2&lt;/th&gt;
+&lt;th&gt;3&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Multifile Header&lt;/td&gt;
+&lt;td&gt;Subfile Index Entries&lt;/td&gt;
+&lt;td&gt;Subfile Data&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;As we can see, the first thing in a multifile will be the header of the multifile, followed by all the subfile index entries that exist within the multifile, and finally, the actual subfile data. This is assuming a &lt;strong&gt;properly packed&lt;/strong&gt; multifile. In a multifile that has not been properly packed, the subfile index entries and the subfiles may easily be in a completely random order. However, even in multifiles that have &lt;em&gt;not been properly packed&lt;/em&gt;, the multifile header is guaranteed to be followed by a subfile index entry. This allows us to traverse even those kind of multifiles easily.&lt;/p&gt;
+&lt;h3 id=&#34;component-1-the-multifile-header&#34;&gt;Component 1: The multifile header&lt;/h3&gt;
+&lt;p&gt;Let&amp;rsquo;s look at the multifile header next:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Offset&lt;/th&gt;
+&lt;th&gt;Field&lt;/th&gt;
+&lt;th&gt;Value&lt;/th&gt;
+&lt;th&gt;Length&lt;/th&gt;
+&lt;th&gt;Explanation&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Magic Number&lt;/td&gt;
+&lt;td&gt;char[6], always &lt;code&gt;pmf\x00\n\r&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;A unique identifier that lets Panda3D know it&amp;rsquo;s dealing with a multifile. The &lt;code&gt;\n\r&lt;/code&gt; at the end lets developers know when their binary multifiles are incorrectly treated as text files.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Major Version&lt;/td&gt;
+&lt;td&gt;int16, usually &lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;The major version of the multifile, this version is changed only when major changes are made to the format.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;Minor Version&lt;/td&gt;
+&lt;td&gt;int16, usually &lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;The minor version of the multifile, this version is changed during incremental changes to the format.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;Scale Factor&lt;/td&gt;
+&lt;td&gt;uint32, usually &lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;The scale factor of the multifile. This is used by a mechanism that allows multifiles to be larger than 4 GiB. If the scale factor is larger than 1, then the subfiles are evenly spaced out according to the scale factor, making it possible to index each multifile with a single 4 byte number. To make things simpler, we will only discuss multifiles with their scale factor set to 1.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;14&lt;/td&gt;
+&lt;td&gt;Timestamp&lt;/td&gt;
+&lt;td&gt;uint32, &lt;a class=&#34;link&#34; href=&#34;https://www.unixtimestamp.com&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Unix timestamp&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;The &lt;a class=&#34;link&#34; href=&#34;https://www.unixtimestamp.com&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Unix timestamp&lt;/a&gt; of the multifile. This lets developers know exactly when a multifile was created or modified.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Well, that isn&amp;rsquo;t so complicated, now is it? Let&amp;rsquo;s unpack this header! Open Python and run the following code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;kn&#34;&gt;from&lt;/span&gt; &lt;span class=&#34;nn&#34;&gt;panda3d.core&lt;/span&gt; &lt;span class=&#34;kn&#34;&gt;import&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;open&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;phase_1.mf&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s1&#34;&gt;&amp;#39;rb&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;dg&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Datagram&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;f&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;read&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;())&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;DatagramIterator&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;dg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;magic_number&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;extract_bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;6&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;major_version&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_int16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;minor_version&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_int16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;scale_factor&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;timestamp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Magic number&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;magic_number&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Major version&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;major_version&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Minor version&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;minor_version&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Scale factor&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;scale_factor&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Timestamp&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;timestamp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The following will be outputted to your console &lt;em&gt;(timestamps may vary)&lt;/em&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Magic number b&#39;pmf\x00\n\r&#39;
+Major version 1
+Minor version 1
+Scale factor 1
+Timestamp 1614297912
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This is exactly what we expected! We have a multifile with version 1.1.&lt;/p&gt;
+&lt;h3 id=&#34;component-2-a-typical-subfile-index-entry&#34;&gt;Component 2: A typical subfile index entry&lt;/h3&gt;
+&lt;p&gt;Let&amp;rsquo;s look at the subfile index entries next.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Offset&lt;/th&gt;
+&lt;th&gt;Field&lt;/th&gt;
+&lt;th&gt;Value&lt;/th&gt;
+&lt;th&gt;Length&lt;/th&gt;
+&lt;th&gt;Explanation&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Next Subfile Address&lt;/td&gt;
+&lt;td&gt;uint32&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;This is the file offset that points to the next subfile index entry. We need to know this value in case our multifile is not properly packed. After we&amp;rsquo;re done reading this index entry, we&amp;rsquo;ll head HERE next! If this is 0, then the multifile contains no more subfiles.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Data Address&lt;/td&gt;
+&lt;td&gt;uint32&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;This is the file offset that points to the actual subfile data. We need to know this value so we can extract our subfile.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;Subfile Length&lt;/td&gt;
+&lt;td&gt;uint32&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;This is the length of the subfile data. This contains the encryption and compression header data as well if the subfile is encrypted or compressed.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12&lt;/td&gt;
+&lt;td&gt;Subfile Flags&lt;/td&gt;
+&lt;td&gt;uint16&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;These are all of the flags that are set on this subfile. Flags are basically special attributes. A list of all flags is provided below.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;14&lt;/td&gt;
+&lt;td&gt;Original Length&lt;/td&gt;
+&lt;td&gt;uint32&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;The original length of the subfile. This is how large the subfile is after decryption and/or decompression. &lt;strong&gt;This field only appears when the subfile is compressed or encrypted!&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;14/18&lt;/td&gt;
+&lt;td&gt;Timestamp&lt;/td&gt;
+&lt;td&gt;uint32&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;The &lt;a class=&#34;link&#34; href=&#34;https://www.unixtimestamp.com&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Unix timestamp&lt;/a&gt; of the subfile. This lets developers know exactly when a subfile was created or modified. If this is set to 0, then the timestamp of the multifile should be used instead.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;18/20&lt;/td&gt;
+&lt;td&gt;Length of Name&lt;/td&gt;
+&lt;td&gt;uint16&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;This is the length of the subfile&amp;rsquo;s name. It tells us how long the subfile&amp;rsquo;s name is.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;20/24&lt;/td&gt;
+&lt;td&gt;Subfile Name&lt;/td&gt;
+&lt;td&gt;char[length]&lt;/td&gt;
+&lt;td&gt;length&lt;/td&gt;
+&lt;td&gt;This is the subfile&amp;rsquo;s name. The length of this name is provided by the 16-bit number we just read previously. &lt;strong&gt;All characters must be individually transformed using the following function: &lt;em&gt;f(x) = 255 - x&lt;/em&gt;&lt;/strong&gt; as they are obfuscated by Panda3D!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Splendid! We can learn from this table that subfile index entries are stored as a &lt;strong&gt;linked list&lt;/strong&gt;. In case you&amp;rsquo;re not aware what a linked list is, it&amp;rsquo;s a data structure that allows you to &lt;em&gt;link&lt;/em&gt; together multiple objects together, by always telling the program the address of the next object.&lt;/p&gt;
+&lt;h4 id=&#34;linked-lists-explained&#34;&gt;Linked lists, explained&lt;/h4&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;linked_lists.png&#34;/&gt; 
+&lt;/figure&gt;
+
+&lt;p&gt;Let&amp;rsquo;s imagine a circle of kids. For simplicity&amp;rsquo;s sake, there are 4 kids in this circle. You&amp;rsquo;re a blindfolded person, trying to find all the kids that are part of the circle.&lt;/p&gt;
+&lt;p&gt;You approach the first kid, and ask his name. He replies: &lt;em&gt;&amp;ldquo;Daniel&amp;rdquo;&lt;/em&gt;, and tells you that the next kid is to his left.&lt;/p&gt;
+&lt;p&gt;You approach the kid to his left, and ask her name. She replies: &lt;em&gt;&amp;ldquo;Anna&amp;rdquo;&lt;/em&gt;, and tells you that the next kid is, once again, to her left.&lt;/p&gt;
+&lt;p&gt;You approach the kid to her left, and ask her name. She replies: &lt;em&gt;&amp;ldquo;Halley&amp;rdquo;&lt;/em&gt;, but warns you that there&amp;rsquo;s an unoccupied hole in the circle to her left. &amp;ldquo;Please, skip that hole and go to the kid that&amp;rsquo;s 2 meters to my left.&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;You then proceed to skip over that hole in the circle and approach the kid 2 meters to Anna&amp;rsquo;s left. You ask his name, and he replies: &lt;em&gt;&amp;ldquo;Max&amp;rdquo;&lt;/em&gt;. He tells you: &amp;ldquo;Don&amp;rsquo;t worry, there is no next kid. You&amp;rsquo;ve visited all of us!&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;Linked lists work the same way. You begin by reading the first object, and then continue by heading to the next object to read, until there are no more objects left to read.&lt;/p&gt;
+&lt;h4 id=&#34;reading-our-first-subfile-index-entry&#34;&gt;Reading our first subfile index entry&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;Let&amp;rsquo;s try to read our two subfiles!&lt;/strong&gt; Continue from the script that we ran previously:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;k&#34;&gt;def&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;read_subfile&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;):&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;next_subfile_address&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Next subfile address:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;next_subfile_address&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;next_subfile_address&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;
+        &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;There are no more subfiles.&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+        &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;data_address&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;subfile_length&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;subfile_flags&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;timestamp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint32&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;name_length&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;get_uint16&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;subfile_name&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;extract_bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;name_length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;subfile_name&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;([&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;255&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;ow&#34;&gt;in&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;subfile_name&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;])&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;# Transform name using f(x) = 255 - x&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Data address:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data_address&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Subfile length:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;subfile_length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Subfile flags:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;subfile_flags&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Timestamp:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;timestamp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Name length:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;name_length&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;Subfile name:&amp;#39;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;subfile_name&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;read_subfile&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The following appears on the terminal &lt;em&gt;(timestamps may vary)&lt;/em&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Next subfile address: 46
+Data address: 79
+Subfile length: 22
+Subfile flags: 64
+Timestamp: 1614297374
+Name length: 8
+Subfile name: b&#39;note.txt&#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;What? Our subfile flags are set to &lt;em&gt;64&lt;/em&gt;? What does that mean? Otherwise, our subfile looks alright!&lt;/p&gt;
+&lt;h4 id=&#34;subfile-flags&#34;&gt;Subfile flags&lt;/h4&gt;
+&lt;p&gt;Here&amp;rsquo;s the table of flags that may be used in relation to subfiles.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Flag&lt;/th&gt;
+&lt;th&gt;Value&lt;/th&gt;
+&lt;th&gt;Explanation&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_deleted&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;0&lt;/sup&gt;
+ &lt;em&gt;~ 1&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile has been deleted from the multifile, so it should be ignored.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_index_invalid&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;1&lt;/sup&gt;
+ &lt;em&gt;~ 2&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile has a corrupt index entry.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_data_invalid&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;2&lt;/sup&gt;
+ &lt;em&gt;~ 4&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile has invalid data.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_compressed&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;3&lt;/sup&gt;
+ &lt;em&gt;~ 8&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile is compressed.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_encrypted&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;4&lt;/sup&gt;
+ &lt;em&gt;~ 16&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile is encrypted.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_signature&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;5&lt;/sup&gt;
+ &lt;em&gt;~ 32&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile is a certificate, used to sign the multifile.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SF_text&lt;/td&gt;
+&lt;td&gt;2&lt;sup&gt;6&lt;/sup&gt;
+ &lt;em&gt;~ 64&lt;/em&gt;&lt;/td&gt;
+&lt;td&gt;The subfile is a text file, rather than a binary file.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Our subfile flags were set to &lt;em&gt;64&lt;/em&gt;. We can find this value in the table: it is the flag &lt;code&gt;SF_text&lt;/code&gt;. This flag was set when our multifile was created, because our &lt;code&gt;note.txt&lt;/code&gt; file is in fact a text file, not a binary file. Cool, isn&amp;rsquo;t it?&lt;/p&gt;
+&lt;p&gt;Of course, flags can be combined. For example, if you&amp;rsquo;ve got a compressed and encrypted text file, then you would want the following flags: &lt;code&gt;SF_compressed&lt;/code&gt;, &lt;code&gt;SF_encrypted&lt;/code&gt; and &lt;code&gt;SF_text&lt;/code&gt;. How would you set all of them? Just add them together! &lt;code&gt;8 + 16 + 64 = 88&lt;/code&gt;. The flag corresponding to a compressed and encrypted text file would therefore be &lt;code&gt;88&lt;/code&gt;.&lt;/p&gt;
+&lt;h4 id=&#34;reading-our-second-subfile-index-entry&#34;&gt;Reading our second subfile index entry&lt;/h4&gt;
+&lt;p&gt;Let&amp;rsquo;s read our next subfile, by going to the next subfile address, which is at &lt;code&gt;46&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;DatagramIterator&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;dg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;skip_bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;46&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;read_subfile&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Our output is now:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Next subfile address: 75
+Data address: 101
+Subfile length: 15
+Subfile flags: 64
+Timestamp: 1614297441
+Name length: 9
+Subfile name: b&#39;note2.txt&#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Cool! We&amp;rsquo;ve got &lt;code&gt;note2.txt&lt;/code&gt; now too! We&amp;rsquo;ve got both of our subfiles now.&lt;/p&gt;
+&lt;h4 id=&#34;but-can-we-go-beyond&#34;&gt;But can we go beyond?&lt;/h4&gt;
+&lt;p&gt;Still, let&amp;rsquo;s try to read another subfile, this time from the next subfile address: &lt;code&gt;75&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;DatagramIterator&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;dg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;skip_bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;75&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;read_subfile&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Looks like we&amp;rsquo;ve reached the end of the multifile:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Next subfile address: 0
+There are no more subfiles.
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;component-3-subfile-data&#34;&gt;Component 3: Subfile data&lt;/h3&gt;
+&lt;p&gt;As a matter of practice, let&amp;rsquo;s attempt to read the data of &lt;code&gt;note.txt&lt;/code&gt; now. Recall that when we requested the subfile index entry for &lt;code&gt;note.txt&lt;/code&gt;, we got the following output: &lt;code&gt;Data address: 79&lt;/code&gt; and &lt;code&gt;Subfile length: 22&lt;/code&gt;. As such, to read &lt;code&gt;note.txt&lt;/code&gt;, we want to skip &lt;code&gt;79&lt;/code&gt; bytes from the beginning of the file, and then read &lt;code&gt;22&lt;/code&gt; bytes.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;DatagramIterator&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;dg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;skip_bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;79&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;di&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;extract_bytes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;22&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;print&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;figure&gt;
+    &lt;img src=&#34;read_phase_1.png&#34;
+         alt=&#34;That&amp;amp;rsquo;s exactly what we put inside note.txt! Great job!!!&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;That&amp;rsquo;s exactly what we put inside &lt;code&gt;note.txt&lt;/code&gt;! Great job!!!&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Similarly, we could read &lt;code&gt;note2.txt&lt;/code&gt;. If you want to challenge yourself, try reading &lt;code&gt;note2.txt&lt;/code&gt;! All of the tools required are at your disposal. Good luck!&lt;/p&gt;
+&lt;h2 id=&#34;about-encrypted-multifiles&#34;&gt;About encrypted multifiles&lt;/h2&gt;
+&lt;p&gt;Ever since Sep 02, 2002, Panda3D supports the encryption of subfiles within multifiles. To make encryption possible, the engine leverages the &lt;a class=&#34;link&#34; href=&#34;https://www.openssl.org&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;OpenSSL&lt;/a&gt; toolkit. &lt;a class=&#34;link&#34; href=&#34;https://www.openssl.org&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;OpenSSL&lt;/a&gt; is a general-purpose cryptography library that provides various cryptographic primitives for easy use. This takes the implementation of these cryptographic primitives out of the hands of Panda3D&amp;rsquo;s maintainers, reducing the burden of maintenance and improving overall security.&lt;/p&gt;
+&lt;p&gt;Encrypted multifiles are multifiles that contain &lt;strong&gt;only encrypted subfiles&lt;/strong&gt;. In a sense, they are meant to be completely unreadable. Only the game engine should be able to read those encrypted multifiles. But is that really true? Is the engine the only one that can read and decrypt those encrypted multifiles? You guessed correctly: if that really was the case, this post most likely wouldn&amp;rsquo;t exist.&lt;/p&gt;
+&lt;p&gt;Encrypted multifiles have been around for a long time, but they have seldom been used. &lt;em&gt;It&amp;rsquo;s very rare to actually see an encrypted multifile in the wild!&lt;/em&gt; Multifiles are not encrypted by default, and it is &lt;strong&gt;always&lt;/strong&gt; a conscious decision on the part of game developers to enable multifile encryption. These encrypted multifiles often have a special &lt;code&gt;.ef&lt;/code&gt; extension, as opposed to the regular &lt;code&gt;.mf&lt;/code&gt; extension. These &lt;code&gt;.ef&lt;/code&gt; files have first appeared in actual usage in 2016, and their usage has since then died down. Modern games tend to forgo the multifile encryption process entirely, but there still exist a few Panda3D applications that, even now, use this specific &lt;code&gt;.ef&lt;/code&gt; convention.&lt;/p&gt;
+&lt;p&gt;Encrypted multifiles are protected by a password that is first used to encrypt them before shipping the game, and then later used by the game engine itself to decrypt them. Decryption of game assets found within multifiles is done &lt;em&gt;on-the-fly&lt;/em&gt;. This approach is favored as opposed to decrypting the entire multifile upon loading: after all, multifiles are designed &lt;strong&gt;to be mounted&lt;/strong&gt; to Panda3D&amp;rsquo;s virtual file system. Unpacking the entire multifile upon loading would greatly impact loading times, memory usage, and also potentially hard disk usage, depending on the tentative implementation.&lt;/p&gt;
+&lt;p&gt;Given that multifiles must be decrypted somehow on the client side, &lt;strong&gt;the client has to have access to the password at some point.&lt;/strong&gt; If multifiles were unpacked entirely upon loading, the password could easily be discarded after the multifile load. This would improve security somewhat, and is an often suggested technique. Of course, it is not infallible: a simple debugger could be used to halt execution of the program as soon as the multifile begins loading. However, since Panda3D decrypts multifiles &lt;em&gt;on-the-fly&lt;/em&gt;, it needs to keep the encryption password in memory indefinitely.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Therefore, encrypting multifiles provides only a false sense of &lt;em&gt;security through obscurity&lt;/em&gt;.&lt;/strong&gt; Because the client has access to the password at at least one point, anyone dedicated enough can easily extract the password either:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;from the runtime code using &lt;em&gt;static analysis of the executable&lt;/em&gt; (by reversing the password generation algorithm)&lt;/li&gt;
+&lt;li&gt;using
+&lt;em&gt;static analysis combined with instruction patching using codecaves&lt;/em&gt; (by intercepting the encryption password setter function)&lt;/li&gt;
+&lt;li&gt;using a &lt;em&gt;debugger&lt;/em&gt; (by interrupting execution within the encryption password setter function and dumping the call stack)&lt;/li&gt;
+&lt;li&gt;or by dumping the memory during execution.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The first option is the most complicated. Since most Panda3D games are written in Python, attempting the first option would require you to:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;learn how the application&amp;rsquo;s bytecode is packed&lt;/li&gt;
+&lt;li&gt;figure out the bytecode layout&lt;/li&gt;
+&lt;li&gt;dump the bytecode using the layout&lt;/li&gt;
+&lt;li&gt;make sense of the bytecode, which might be non-standard&lt;/li&gt;
+&lt;li&gt;and reverse engineer the original function.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The second and third options are amongst the easiest, but they still require the usage of special tools that are subjectively difficult to learn. These options also require multiple steps, and messing up a single step would result in failure. They also require per-game disassembly and basic knowledge of reverse engineering. As such, the last option is the easiest to realize for a beginner - extracting the password from the application&amp;rsquo;s memory during execution. However, we will also discuss the first option, albeit not in great detail.&lt;/p&gt;
+&lt;h2 id=&#34;why-encrypt-multifiles&#34;&gt;Why encrypt multifiles?&lt;/h2&gt;
+&lt;p&gt;This is an easy topic to cover. Traditionally, multifiles have not been encrypted. However, the following concerns can lead a game developer to encrypt their multifiles:&lt;/p&gt;
+&lt;h3 id=&#34;preventing-exploits&#34;&gt;Preventing exploits&lt;/h3&gt;
+&lt;p&gt;As mentioned before in this article, hackers may abuse the multifile system to their own benefit. Having access to a game&amp;rsquo;s multifiles would allow them to modify the models that make up the game world. &lt;strong&gt;However, thanks to cryptographic signing, encrypting multifiles is no longer necessary to prevent hackers from exploiting your game.&lt;/strong&gt; Signatures are specific to a single multifile, and editing the multifile in any way would break the signature. &lt;em&gt;Multifiles with broken signatures are not loaded by the game.&lt;/em&gt; In addition to this, content packs can be implemented as to only allow visual or auditory effects to be modified, leaving all custom, unsigned and potentially dangerous models out of the virtual file system.&lt;/p&gt;
+&lt;h3 id=&#34;hiding-unreleased-features&#34;&gt;Hiding unreleased features&lt;/h3&gt;
+&lt;p&gt;A game developer might want to hide their unreleased features. As such, they will encrypt their multifiles, making sure that their players cannot have a glance at their assets. &lt;em&gt;This is unnecessary, however, and is not the right approach in the first place.&lt;/em&gt; Data miners have always existed, and will always exist. People &lt;strong&gt;will&lt;/strong&gt; find a way to access your content, and the only way to protect it is to follow &lt;a class=&#34;link&#34; href=&#34;https://nvie.com/posts/a-successful-git-branching-model&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;proper Git version control branching best practices&lt;/a&gt;. By employing a successful branch workflow, your unreleased features will never make it into production.&lt;/p&gt;
+&lt;h3 id=&#34;preventing-unauthorized-usage-of-game-assets&#34;&gt;Preventing unauthorized usage of game assets&lt;/h3&gt;
+&lt;p&gt;Some game developers have grown paranoid that their game assets will eventually be stolen and used to create exact copies of their games. This paranoia stems from the years between &lt;code&gt;2013&lt;/code&gt; and &lt;code&gt;2017&lt;/code&gt;, a notorious time period in which novice developers took the game assets of already existing games, and used them to create copies of games, only changing the name of the game and other miscellaneous details. Coincidentally, this is also the same time period in which encrypted multifiles became a topic of discussion.&lt;/p&gt;
+&lt;p&gt;Nowadays, the fad of creating copy-paste projects has largely died down. Most of this can be attributed to the fact that the novice developers that were largely responsible for this phenomenon have since then matured and turned into knowledgeable individuals, leading to a complete paradigm shift in thinking. Some projects, however, still employ encryption. Most of them do so simply because their multifile loading systems were created in this time period, and has not been revised since.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Focus has also mostly shifted to creative work, rather than simply just programming.&lt;/strong&gt; Nowadays, creative people are more popular than their programmer counterparts. Channels such as &lt;a class=&#34;link&#34; href=&#34;https://youtube.com/channel/UCdYoa4G7v34d7WAsnMgdD6g&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Smokin&#39; Foreman&lt;/a&gt; and &lt;a class=&#34;link&#34; href=&#34;https://youtube.com/channel/UCKV9T6oi2VNaxEkpX0IJctA&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;ToontownDock&lt;/a&gt; are very popular amongst players. Creators create content using existing game assets as their base. Without access to game assets, they cannot create their videos.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;The usage of encrypted multifiles leads to a scenario in which game assets are treated as a luxury.&lt;/strong&gt; Ordinary people do not have access to these game assets. Rather, only &lt;em&gt;popular creators with well-established connections&lt;/em&gt; can ever access those assets. This leads to a &lt;em&gt;Partner Program&lt;/em&gt;-esque situation in which only a select few are allowed to create content, and the rest&amp;rsquo;s work is severely hindered by the lack of support. &lt;strong&gt;Attempting to help these unprivileged creators often leads to being bullied into submission by game developers.&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;characteristics-of-encrypted-subfiles&#34;&gt;Characteristics of encrypted subfiles&lt;/h2&gt;
+&lt;p&gt;Encrypted subfiles are similar to regular subfiles, but their format is a bit different.&lt;/p&gt;
+&lt;p&gt;We can observe the following differences:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Encrypted subfiles have one extra binary field: &lt;strong&gt;Original Length&lt;/strong&gt;, which is the original length of the subfile. This marks the size of the subfile after decryption in bytes.&lt;/li&gt;
+&lt;li&gt;Encrypted subfiles have the following subfile flag set at all times: &lt;code&gt;SF_encrypted&lt;/code&gt; (2&lt;sup&gt;4&lt;/sup&gt;
+ &lt;em&gt;~ 16&lt;/em&gt;)&lt;/li&gt;
+&lt;li&gt;Encrypted subfile data contains more than just subfile data: it contains its own encryption header, which holds information about the algorithm used to encrypt the subfile.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;the-encryption-header&#34;&gt;The encryption header&lt;/h3&gt;
+&lt;p&gt;All encryption subfile data is preceded by the following encryption header:&lt;sup id=&#34;fnref:6&#34;&gt;&lt;a href=&#34;#fn:6&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;6&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Offset&lt;/th&gt;
+&lt;th&gt;Field&lt;/th&gt;
+&lt;th&gt;Value&lt;/th&gt;
+&lt;th&gt;Length&lt;/th&gt;
+&lt;th&gt;Explanation&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Encryption Algorithm NID&lt;/td&gt;
+&lt;td&gt;uint16&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;The NID (numeric identifier) of the algorithm used to encrypt this subfile. By default, Panda3D encrypts all subfiles using the Blowfish algorithm in CBC mode (bf-cbc), which has an NID of 91. NIDs are specific to OpenSSL, and may be converted to an ASN1 object using the &lt;code&gt;OBJ_nid2obj&lt;/code&gt; function in OpenSSL.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Key Length&lt;/td&gt;
+&lt;td&gt;uint16&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;The key length of the encryption key that is derived from the encryption password. By default, this is 16, meaning that Panda3D encrypts subfiles using 16 byte long keys.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Key Iteration Count&lt;/td&gt;
+&lt;td&gt;uint16&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;The number of times that the password is hashed to generate the key when encrypting, divided by 1000. For example, if this value is 10, then the password is hashed 10000 times to generate the key. A value of 0 means that the password is only hashed once. The higher this value is, the more time it takes to brute force the password.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Encryption Magic&lt;/td&gt;
+&lt;td&gt;char[6]&lt;/td&gt;
+&lt;td&gt;crypty&lt;/td&gt;
+&lt;td&gt;The first block of the encrypted data begins with the string literal: &lt;code&gt;crypty&lt;/code&gt;. We can use this string literal to test if our decryption succeeded. If we decrypt an encrypted subfile, and it begins with the string literal &lt;code&gt;crypty&lt;/code&gt;, then that means our password can be considered correct.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12&lt;/td&gt;
+&lt;td&gt;Encrypted Data&lt;/td&gt;
+&lt;td&gt;char[n]&lt;/td&gt;
+&lt;td&gt;n&lt;/td&gt;
+&lt;td&gt;The continuation of the encrypted data block stream. To an outsider, this just looks like a random stream of bytes. However, decrypting the encrypted data allows us to peek inside the subfile.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;verifying-passwords&#34;&gt;Verifying passwords&lt;/h2&gt;
+&lt;p&gt;Let&amp;rsquo;s assume that we have an encrypted phase file alongside a potential password. How do we know if that password is correct? How do we know if that password can unlock the given multifile?&lt;/p&gt;
+&lt;p&gt;The easiest way is to try to decrypt the multifile using the &lt;code&gt;multify.exe&lt;/code&gt; tool:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;decrypt_phase_1.png&#34;/&gt; 
+&lt;/figure&gt;
+
+&lt;p&gt;Decrypting a phase file with the wrong password will yield an error, but decrypting a phase file with the right password will result in the multifile being extracted to your hard disk.&lt;/p&gt;
+&lt;p&gt;The second, more in-depth way to validate an encryption password is to try to decrypt a single subfile from the multifile. After decryption, if the decrypted data begins with the string literal &lt;code&gt;crypty&lt;/code&gt;, then the password is correct. If the decrypted data does NOT begin with the string literal &lt;code&gt;crypty&lt;/code&gt;, then the password is incorrect.&lt;/p&gt;
+&lt;p&gt;Feel free to use the &lt;a class=&#34;link&#34; href=&#34;https://gist.github.com/darktohka/afee984e1199c2cd62b7bbb8b1fdea47&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;multifile class I&amp;rsquo;ve created and shared on GitHub&lt;/a&gt; to test this behavior:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;test_phase_1.png&#34;/&gt; 
+&lt;/figure&gt;
+
+&lt;h2 id=&#34;panda3d-encryption-demo-sample-program-with-an-encrypted-multifile&#34;&gt;Panda3D Encryption Demo: Sample program with an encrypted multifile&lt;/h2&gt;
+&lt;p&gt;For the purpose of this article, we&amp;rsquo;ll be using the following sample program, which includes a single encrypted multifile: &lt;code&gt;phase_1.ef&lt;/code&gt;.&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;sample_program.png&#34;
+         alt=&#34;Panda3D Encryption Demo - phase_1.ef&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;Panda3D Encryption Demo - phase_1.ef&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;The source code is available on &lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/panda3d-encryption-demo&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;GitHub&lt;/a&gt;. Please download the &lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/panda3d-encryption-demo/releases/latest&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;built sample program from the latest GitHub release page&lt;/a&gt;. Extract &lt;code&gt;encryption-1.0.1_win_amd64.zip&lt;/code&gt;, and run &lt;code&gt;encryption.exe&lt;/code&gt; to start the sample.&lt;/p&gt;
+&lt;p&gt;Your task is the following: Find out the password that was used to encrypt &lt;code&gt;phase_1.ef&lt;/code&gt;, and decrypt the multifile! There&amp;rsquo;s an input box you can use to check whether your guess is correct or not.&lt;/p&gt;
+&lt;p&gt;Obviously, if you&amp;rsquo;re just trying to guess the password&amp;hellip; well, see you in two hundred years! We&amp;rsquo;re going to be taking a more sensible approach.&lt;/p&gt;
+&lt;p&gt;Keep in mind that our sample program was compiled using &lt;strong&gt;MSVC 2019&lt;/strong&gt; &lt;em&gt;(Visual Studio 2019)&lt;/em&gt;, targeting the x64 architecture! Some of the offsets used in the last part of this article are specific to this compiler and architecture, and will not work on applications that use an older compiler or a different architecture. It is up to you, the reader, to port these offsets over to your target environment.&lt;/p&gt;
+&lt;h2 id=&#34;finding-the-encryption-password-setter-function-with-ida-pro&#34;&gt;Finding the encryption password setter function with IDA Pro&lt;/h2&gt;
+&lt;p&gt;As mentioned before, we can attempt to perform &lt;em&gt;static analysis&lt;/em&gt; on the binary. However, &lt;code&gt;encryption.exe&lt;/code&gt; is not the only binary present in the extracted folder. In fact, &lt;code&gt;encryption.exe&lt;/code&gt; is just responsible for wrapping the Python and Panda3D runtimes.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;d like to analyze the library that actually contains the code responsible for setting the encryption password. Let&amp;rsquo;s take a look at &lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/blob/06921aba93bc7a573a471dbea3aa3f598beb45ed/panda/src/express/multifile.I#L147&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;the source code for &lt;code&gt;set_encryption_password&lt;/code&gt;&lt;/a&gt; first:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span class=&#34;n&#34;&gt;INLINE&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Multifile&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;set_encryption_password&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;encryption_password&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_encryption_password&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;encryption_password&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_new_subfiles&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;empty&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;())&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+      &lt;span class=&#34;n&#34;&gt;flush&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;_encryption_password&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;encryption_password&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This tells us a few things about the &lt;code&gt;set_encryption_password&lt;/code&gt; method. First of all, it&amp;rsquo;s an &lt;code&gt;INLINE&lt;/code&gt; function. This means that, when it&amp;rsquo;s compiled to machine code, it will not have its own function. Rather, it will be directly built into any function that calls it. This makes things more complicated for us, because we can&amp;rsquo;t just simply &lt;em&gt;find the &lt;code&gt;set_encryption_password&lt;/code&gt; method inside the binary&lt;/em&gt;. There&amp;rsquo;s no &lt;em&gt;one singular method&lt;/em&gt; built into the binaries for setting the password. Rather, we&amp;rsquo;ll need to find &lt;strong&gt;all&lt;/strong&gt; the different instances that &lt;code&gt;set_encryption_password&lt;/code&gt; is called in. Or, at least, we need to find the instances that actually matter for us. Secondly, it would be difficult to find this method if all it did was set a string in memory. &lt;strong&gt;But it also calls the &lt;code&gt;Multifile::flush()&lt;/code&gt; method if the new subfile list is empty.&lt;/strong&gt; This is easy to look out for, so finding the method will be way easier if we mainly look for calls to the &lt;code&gt;flush&lt;/code&gt; method.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;What we&amp;rsquo;re most interested in are the Python -&amp;gt; C++ bindings.&lt;/strong&gt; Panda3D&amp;rsquo;s Interrogate system automatically generates Python bindings for all C++ methods that are published. And &lt;code&gt;set_encryption_password&lt;/code&gt; just so happens to be published! In fact, our sample program even calls it. That&amp;rsquo;s how it sets the encryption password for the &lt;code&gt;phase_1.ef&lt;/code&gt; file. Let&amp;rsquo;s take a look at the automatically generated Python bindings for &lt;code&gt;set_encryption_password&lt;/code&gt; in &lt;code&gt;libp3express_igate.cxx&lt;/code&gt;! Most likely, we will be able to intercept this method to figure out the encryption password.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span class=&#34;cm&#34;&gt;/**
+&lt;/span&gt;&lt;span class=&#34;cm&#34;&gt; * Python function wrapper for:
+&lt;/span&gt;&lt;span class=&#34;cm&#34;&gt; * inline void Multifile::set_encryption_password(std::string const &amp;amp;encryption_password)
+&lt;/span&gt;&lt;span class=&#34;cm&#34;&gt; */&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;static&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PyObject&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;Dtool_Multifile_set_encryption_password_494&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;PyObject&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;self&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PyObject&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;arg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Multifile&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;local_this&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;nullptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Dtool_Call_ExtractThisPointer_NonConst&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;self&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Dtool_Multifile&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;**&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;local_this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;Multifile.set_encryption_password&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;nullptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;n&#34;&gt;Py_ssize_t&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;param1_len&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;param1_str&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;PyUnicode_AsUTF8AndSize&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;arg&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;param1_len&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;param1_str&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;nullptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;((&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;local_this&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;).&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;set_encryption_password&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;string&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;param1_str&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;param1_len&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Dtool_Return_None&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;!&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;_PyErr_OCCURRED&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;())&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;Dtool_Raise_BadArgumentsError&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;
+      &lt;span class=&#34;s&#34;&gt;&amp;#34;set_encryption_password(const Multifile self, str encryption_password)&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+  &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;nullptr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;JACKPOT!&lt;/strong&gt; We have a string literal. &lt;code&gt;Multifile.set_encryption_password&lt;/code&gt;. &lt;strong&gt;String literals are the easiest way to find a specific function, as you can just follow its cross-references in the machine code.&lt;/strong&gt; Let&amp;rsquo;s open up IDA Pro, and start disasembling &lt;code&gt;panda3d.core.pyd&lt;/code&gt;, the Python -&amp;gt; C++ bindings for &lt;code&gt;panda3d.core&lt;/code&gt;, the package containing the &lt;code&gt;Multifile&lt;/code&gt; class. Open up the &lt;code&gt;Strings window&lt;/code&gt; in IDA Pro using &lt;code&gt;Shift+F12&lt;/code&gt; and search for our string literal, &lt;code&gt;Multifile.set_encryption_password&lt;/code&gt;!&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;ida_strings.png&#34;
+         alt=&#34;The multifile string literal, found in the sample binary&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The multifile string literal, found in the sample binary&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Double click on the string literal. This will open up the &lt;code&gt;IDA View-A&lt;/code&gt; tab. Right click on the &lt;code&gt;aMultifileSetEn_0&lt;/code&gt; label, and press &lt;strong&gt;List cross references to&amp;hellip;&lt;/strong&gt;&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;ida_xrefs.png&#34;
+         alt=&#34;IDA lists all the references to this string literal.&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;IDA lists all the references to this string literal.&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;The only reference is our target function. Double click on the cross-reference. This will bring you to the graph that describes the execution flow of the function:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;ida_graph.png&#34;
+         alt=&#34;This is the function we&amp;amp;rsquo;ve been looking for!&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;This is the function we&amp;rsquo;ve been looking for!&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Press &lt;strong&gt;F5&lt;/strong&gt; to begin decompiling the function to pseudocode:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;ida_pseudocode.png&#34;
+         alt=&#34;The disassembled pseudocode. Here is the function that sets the encryption password in the memory!&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The disassembled pseudocode. Here is the function that sets the encryption password in the memory!&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Now that we know exactly where the method that sets the encryption password is, we could do many interesting things. For instance, we could search for some unused bytes in the binary to insert a codecave at, so that we could create a relative jump from the original set_encryption_password to our codecave, and, for example, execute &lt;code&gt;printf&lt;/code&gt; on &lt;code&gt;v4 + 45&lt;/code&gt; inside the codecave before jumping back to the original function. Or, we could use a debugger to create a breakpoint at this point of the execution, and extract the value of &lt;code&gt;v4 + 45&lt;/code&gt;. However, these approaches are all dependent on the game binary itself (there may also be anti-debugger checks present in a binary), and as such, we will instead explore a game binary independent method to extract encrypted multifile phase files: &lt;strong&gt;memory scanning&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;memory-scanning-as-a-means-to-extract-multifile-passwords&#34;&gt;Memory scanning as a means to extract multifile passwords&lt;/h2&gt;
+&lt;p&gt;Memory scanning is an interesting technique, first popularized by the ubiquitous Cheat Engine. Cheat Engine enables any user to inspect values inside a process&amp;rsquo;s memory. After inspecting the process&amp;rsquo;s memory, you can choose which bytes to edit and/or freeze.&lt;sup id=&#34;fnref:7&#34;&gt;&lt;a href=&#34;#fn:7&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;7&lt;/a&gt;&lt;/sup&gt; Cheat Engine was revolutionary because it came with an easy-to-use graphical user interface. As such, the barrier to entry to memory scanning was turned next to minimal.&lt;/p&gt;
+&lt;p&gt;Memory scanning is a technique that explores the memory of a given process. By scanning memory, you are looking for certain values of interest in the process memory. In our case, we want to find multifile passwords in the memory. Unfortunately for us, passwords may appear anywhere in the memory of the application. It&amp;rsquo;s not even guaranteed to be an ASCII human readable string: OpenSSL accepts even byte-strings for password derivation.&lt;/p&gt;
+&lt;p&gt;So, instead of outright looking for multifile passwords, we should look for &lt;strong&gt;multifile objects&lt;/strong&gt; in the memory. After all, if we find a multifile object in the memory, we can easily figure out exactly where it stores its password. In the end, the best approach is to work backwards: if we can find the multifile&amp;rsquo;s name (a well-known value) in the memory, we can then figure out where its multifile object is stored. After we find its multifile object, we can then easily read the encryption password associated with the multifile.&lt;/p&gt;
+&lt;h3 id=&#34;what-is-memory&#34;&gt;What is memory?&lt;/h3&gt;
+&lt;p&gt;Memory is one of the most important components in your computer. RAM gives applications a place to store and access data on a short-term basis. Furthermore, it also gives application a place to save their executable code for their lifetime, preventing the computer from thrashing the hard disk just to execute a simple application.&lt;/p&gt;
+&lt;p&gt;The memory contains everything that an application needs for its calculations. Naturally, this includes the encryption passwords for all currently loaded encrypted multifiles. This turns the memory into a very appetizing target for us, as we would like to learn how to extract these passwords from the application, hopefully without having to reverse engineer the application itself.&lt;/p&gt;
+&lt;p&gt;Memory can be addressed using either 4 or 8 byte long numbers. Usually, these numbers are in hexadecimal format. On a 32-bit architecture, memory is addressed using 4 byte numbers, and on a 64-bit architecture, memory is addressed using 8 byte numbers. Our sample application is built for a 64-bit architecture (x64), so we&amp;rsquo;ll be using 8 byte long numbers to address our memory.&lt;/p&gt;
+&lt;p&gt;The best analogy for addressing memory is the Great Wall of China. Imagine the Great Wall of China.&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;great_wall_of_china.png&#34;
+         alt=&#34;The Great Wall of China, colorized&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The Great Wall of China, colorized&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;It is the longest man-made wall ever, with a main length of 3460 kilometers. Imagine that there are guard towers on the Great Wall of China. Each guard tower is numbered, beginning from 1. This is the &lt;strong&gt;memory address&lt;/strong&gt;. If you know that a guard tower&amp;rsquo;s index is 26, then you know that &lt;strong&gt;it is the 26th tower&lt;/strong&gt;. Each tower contains a guard, with a piece of paper in his pocket. On the piece of paper is always a number from 0 to 255. That number is the value at that specific memory address.&lt;/p&gt;
+&lt;p&gt;So if you were to ask: &amp;ldquo;What is the value at memory address 26?&amp;rdquo;, you are basically asking: &amp;ldquo;What&amp;rsquo;s the value on the 26th tower&amp;rsquo;s guard&amp;rsquo;s piece of paper?&amp;rdquo; And the answer to that question is always a number from 0 to 255: a single &lt;strong&gt;byte&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;what-is-a-pointer&#34;&gt;What is a pointer?&lt;/h3&gt;
+&lt;p&gt;Pointers sound very confusing at first, but they&amp;rsquo;re actually a quite simple concept. Pointers are simple numbers. They&amp;rsquo;re 4 bytes long on a 32-bit architecture, and 8 bytes long on a 64-bit architecture. Chances are you are using a 64-bit architecture right now. Their name alludes to their true purpose: they &lt;strong&gt;point&lt;/strong&gt; to &lt;strong&gt;memory&lt;/strong&gt;. Pointers are &lt;strong&gt;memory addresses&lt;/strong&gt;. If you have a pointer, you can then head to that &lt;strong&gt;point&lt;/strong&gt; in memory and read as much memory as you want from that offset.&lt;/p&gt;
+&lt;h3 id=&#34;class-memory-layouts-in-c&#34;&gt;Class memory layouts in C++&lt;/h3&gt;
+&lt;p&gt;Thankfully, instances of all classes in C++ have very well-defined memory layouts. The memory layout is determined by the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;The compiler&lt;/strong&gt;. MSVC 2017 and MSVC 2019 are ABI compatible with each other, and as such, classes compiled using MSVC 2017 and classes compiled using MSVC 2019 have the same memory layout. However, a class compiled using another compiler, such as Clang, GCC, or MSVC 2015 will have a different memory layout. &lt;strong&gt;We&amp;rsquo;ll be assuming a MSVC 2019 compiler memory layout for all classes from now on.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The architecture&lt;/strong&gt;. x86 and x64 architectures have different pointer type sizes. Certain types, such as &lt;code&gt;std::string&lt;/code&gt;, also have different layouts on x86 and x64. &lt;strong&gt;From now on, we&amp;rsquo;ll be assuming a x64 memory layout for all classes.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The class declaration&lt;/strong&gt;. Every class is defined inside a &lt;em&gt;header file&lt;/em&gt; (&lt;code&gt;*.h&lt;/code&gt;). The order of the class members, as well as the sizes of the class members dictate the memory layout of the class. If you swap a class member with another, their actual positions in memory are switched after compilation. We know the memory layout of the Multifile class because Panda3D&amp;rsquo;s source code is completely open source.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To understand exactly how memory layouts work, and to find out exactly how to determine the exact memory layout of a C++ class, we are going to create our own C++ class and try to figure out its memory layout.&lt;/p&gt;
+&lt;p&gt;Consider the following C++ code (mixed with C code, in order to reduce the amount of included classes for the purpose of this article):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span class=&#34;cp&#34;&gt;#include&lt;/span&gt; &lt;span class=&#34;cpf&#34;&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class=&#34;cp&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;cp&#34;&gt;&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;nc&#34;&gt;TestClass&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+
+&lt;span class=&#34;k&#34;&gt;public&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt;
+    &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;first&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;second&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;third&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt;
+
+&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;main&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;TestClass&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;test&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;new&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;TestClass&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;test&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;first&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;4&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;test&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;second&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;test&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;third&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;9&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+    &lt;span class=&#34;n&#34;&gt;printf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;Size of TestClass instance: %llu&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;sizeof&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;test&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;));&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;printf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;TestClass memory:&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+
+    &lt;span class=&#34;kt&#34;&gt;unsigned&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;memory&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;unsigned&lt;/span&gt; &lt;span class=&#34;kt&#34;&gt;char&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;test&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+
+    &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kt&#34;&gt;int&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;i&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;sizeof&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;test&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+        &lt;span class=&#34;n&#34;&gt;printf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;%u &amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;memory&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]);&lt;/span&gt;
+    &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+
+    &lt;span class=&#34;n&#34;&gt;printf&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;\n&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Save the code provided above as &lt;code&gt;classTest.cxx&lt;/code&gt;. Note how our new custom class is called &lt;code&gt;TestClass&lt;/code&gt;, and it has three class members: &lt;code&gt;first&lt;/code&gt;, &lt;code&gt;second&lt;/code&gt; and &lt;code&gt;third&lt;/code&gt;, all three being &lt;code&gt;int&lt;/code&gt; types (4 byte numbers). The &lt;code&gt;first&lt;/code&gt; class member will be set to &lt;code&gt;4&lt;/code&gt;, the &lt;code&gt;second&lt;/code&gt; to &lt;code&gt;2&lt;/code&gt;, and the &lt;code&gt;third&lt;/code&gt; to &lt;code&gt;9&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Open your &lt;code&gt;x64 Native Tools Command Prompt for VS 2019&lt;/code&gt;, and compile &lt;code&gt;classTest.cxx&lt;/code&gt; with the following command:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cl /d1reportAllClassLayout classTest.cxx&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Note that we&amp;rsquo;re using the &lt;code&gt;/d1reportAllClassLayout&lt;/code&gt; command line option of &lt;code&gt;cl.exe&lt;/code&gt;, the official Microsoft Visual C++ compiler. This is an &lt;em&gt;undocumented feature&lt;/em&gt; of the Visual C++ compiler front-end, meaning that it is not supported, and not advertised by Microsoft in any way or capacity.&lt;sup id=&#34;fnref:8&#34;&gt;&lt;a href=&#34;#fn:8&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;8&lt;/a&gt;&lt;/sup&gt; Regardless, it is &lt;strong&gt;very&lt;/strong&gt; useful for engineers who work with memory dumps on a daily basis, as using this command line option allows you to see the entire memory layout of all classes encountered during compilation.&lt;/p&gt;
+&lt;p&gt;Not only will &lt;code&gt;cl&lt;/code&gt; compile our program into an executable called &lt;code&gt;classText.exe&lt;/code&gt;, but it will also share with us the &lt;strong&gt;memory layout of TestClass, our custom class&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;class TestClass size(12):
+        +---
+ 0      | first
+ 4      | second
+ 8      | third
+        +---
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Wow! Is it really that simple? Yes, it is. More complicated classes will have automatic alignment adjustments, but that is of little concern to us: the important bits are the &lt;strong&gt;offsets&lt;/strong&gt;, the numbers that appear in the first column of the memory layout.&lt;/p&gt;
+&lt;p&gt;For example, if you know that a class begins at, for example, 0x00005210 in your memory, and you want to read the memory of the class member named &lt;code&gt;second&lt;/code&gt;, then first, you&amp;rsquo;ll need to begin at the memory address 0x00005210, skip 4 bytes (equal to the &lt;em&gt;offset&lt;/em&gt; of &lt;code&gt;second&lt;/code&gt;) to 0x00005214, and read 4 bytes at that address (equal to the &lt;em&gt;size&lt;/em&gt; of &lt;code&gt;second&lt;/code&gt;, which is an int, a 4 byte number).&lt;/p&gt;
+&lt;p&gt;Since our class instance is allocated using the &lt;code&gt;new&lt;/code&gt; operator, the class instance is saved in the &lt;code&gt;heap&lt;/code&gt;, a special area of the memory dedicated to long-living objects. It is &lt;strong&gt;not lost&lt;/strong&gt; when the function that created the class instance ends. Multifiles are allocated in Panda3D in exactly the same way, so our access to this data is guaranteed.&lt;/p&gt;
+&lt;p&gt;Run &lt;code&gt;classText.exe&lt;/code&gt; in your Command Prompt for the following output:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Size of TestClass instance: 12
+TestClass memory:
+
+4 0 0 0 2 0 0 0 9 0 0 0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This means that our compiler was right: TestClass&amp;rsquo;s size is indeed 12, the first 4 bytes are used by the class member named &lt;code&gt;first&lt;/code&gt; (set to 4), the second 4 bytes are used by the class member named &lt;code&gt;second&lt;/code&gt; (set to 2), and the last 4 bytes are used by the class member named &lt;code&gt;third&lt;/code&gt; (set to 9).&lt;/p&gt;
+&lt;h3 id=&#34;stdstring-internals&#34;&gt;std::string internals&lt;/h3&gt;
+&lt;p&gt;Before we go any further, we must talk about &lt;code&gt;std::string&lt;/code&gt;. This container is going to be crucial to our research from now on. Each &lt;code&gt;std::string&lt;/code&gt; stores characters. For example, if you want to represent the following text: &lt;em&gt;&amp;ldquo;I love my internet friends&amp;rdquo;&lt;/em&gt;, you would need to store this data in an &lt;code&gt;std::string&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;An &lt;code&gt;std::string&lt;/code&gt; is a data container that always takes up &lt;code&gt;32&lt;/code&gt; bytes of memory in our MSVC 2019 x64 environment. But how come it always takes up &lt;strong&gt;32&lt;/strong&gt; bytes of memory? &lt;em&gt;&amp;ldquo;I love my internet friends&amp;rdquo;&lt;/em&gt; should only be 26 bytes long, no? What if I want to store something longer, like &lt;em&gt;&amp;ldquo;Great expectations of sun rays and bright days&amp;rdquo;&lt;/em&gt;? That is 46 bytes long, how come it fits in a &lt;code&gt;32&lt;/code&gt; byte long container?&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;It turns out that &lt;code&gt;std::string&lt;/code&gt; is a very clever data container. &lt;em&gt;It acts differently based on how long your string is.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;If your &lt;code&gt;std::string&lt;/code&gt; is shorter than or equal to 16 characters, then the first 16 characters are used to store the string &lt;em&gt;as-is&lt;/em&gt;, while index 16 to index 24 is used to store a 8 byte long length.&lt;/strong&gt; This is called Small String Optimization, and is yet another undocumented MSVC feature. All compilers implement some sort of Small String Optimization, but these implementations differ between compilers. There is almost no information on MSVC&amp;rsquo;s SSO on the internet, but it&amp;rsquo;s fairly easy to figure the format out.&lt;/p&gt;
+&lt;p&gt;For example, let&amp;rsquo;s encode the following string: &lt;code&gt;Blood of Villain&lt;/code&gt;. Encoded as &lt;code&gt;std::string&lt;/code&gt;, &lt;code&gt;Blood of Villain&lt;/code&gt; manifests in the memory as such:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;0&lt;/th&gt;
+&lt;th&gt;1&lt;/th&gt;
+&lt;th&gt;2&lt;/th&gt;
+&lt;th&gt;3&lt;/th&gt;
+&lt;th&gt;4&lt;/th&gt;
+&lt;th&gt;5&lt;/th&gt;
+&lt;th&gt;6&lt;/th&gt;
+&lt;th&gt;7&lt;/th&gt;
+&lt;th&gt;8&lt;/th&gt;
+&lt;th&gt;9&lt;/th&gt;
+&lt;th&gt;10&lt;/th&gt;
+&lt;th&gt;11&lt;/th&gt;
+&lt;th&gt;12&lt;/th&gt;
+&lt;th&gt;13&lt;/th&gt;
+&lt;th&gt;14&lt;/th&gt;
+&lt;th&gt;15&lt;/th&gt;
+&lt;th&gt;16&lt;/th&gt;
+&lt;th&gt;17&lt;/th&gt;
+&lt;th&gt;18&lt;/th&gt;
+&lt;th&gt;19&lt;/th&gt;
+&lt;th&gt;20&amp;hellip;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;B&lt;/td&gt;
+&lt;td&gt;l&lt;/td&gt;
+&lt;td&gt;o&lt;/td&gt;
+&lt;td&gt;o&lt;/td&gt;
+&lt;td&gt;d&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;o&lt;/td&gt;
+&lt;td&gt;f&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;V&lt;/td&gt;
+&lt;td&gt;i&lt;/td&gt;
+&lt;td&gt;l&lt;/td&gt;
+&lt;td&gt;l&lt;/td&gt;
+&lt;td&gt;a&lt;/td&gt;
+&lt;td&gt;i&lt;/td&gt;
+&lt;td&gt;n&lt;/td&gt;
+&lt;td&gt;0x10&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The first 16 characters are used to store the string, while the bytes from &lt;code&gt;16&lt;/code&gt; to &lt;code&gt;24&lt;/code&gt; are used to store the length, which is simply &lt;code&gt;0x10&lt;/code&gt;, or &lt;code&gt;16&lt;/code&gt; in this case.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;HOWEVER, if your &lt;code&gt;std::string&lt;/code&gt; is longer than 16 characters, then the first 8 characters are used to store a pointer to the actual string data. Your ACTUAL string data will be saved elsewhere in the memory. The length of the string is still saved between the 16th and 24th indices.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;What happens if we encode the following string: &lt;code&gt;We are long strings&lt;/code&gt;? Our &lt;code&gt;std::string&lt;/code&gt; might look something like this:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;0&lt;/th&gt;
+&lt;th&gt;1&lt;/th&gt;
+&lt;th&gt;2&lt;/th&gt;
+&lt;th&gt;3&lt;/th&gt;
+&lt;th&gt;4&lt;/th&gt;
+&lt;th&gt;5&lt;/th&gt;
+&lt;th&gt;6&lt;/th&gt;
+&lt;th&gt;7&lt;/th&gt;
+&lt;th&gt;&amp;hellip;&lt;/th&gt;
+&lt;th&gt;16&lt;/th&gt;
+&lt;th&gt;17&lt;/th&gt;
+&lt;th&gt;18&lt;/th&gt;
+&lt;th&gt;19&lt;/th&gt;
+&lt;th&gt;20&amp;hellip;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x43&lt;/td&gt;
+&lt;td&gt;0x50&lt;/td&gt;
+&lt;td&gt;0xAB&lt;/td&gt;
+&lt;td&gt;0xEF&lt;/td&gt;
+&lt;td&gt;&amp;hellip;&lt;/td&gt;
+&lt;td&gt;0x13&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;td&gt;0x00&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;You might&amp;rsquo;ve noticed that the first 16 characters no longer represent ASCII data. In fact, the first 8 bytes constitute a pointer. Let&amp;rsquo;s head to &lt;code&gt;0x000000004350ABEF&lt;/code&gt;, the 64-bit memory address encoded in the first 8 bytes of this &lt;code&gt;std::string&lt;/code&gt;, and read &lt;code&gt;0x13&lt;/code&gt; characters (19 characters, equal to the length of &lt;code&gt;We are long strings&lt;/code&gt;.) The exact value at this address is &lt;code&gt;We are long strings&lt;/code&gt;!&lt;/p&gt;
+&lt;h3 id=&#34;the-multifile-memory-layout&#34;&gt;The Multifile memory layout&lt;/h3&gt;
+&lt;p&gt;Now that we&amp;rsquo;ve learned how to figure out a class&amp;rsquo;s memory layout, let&amp;rsquo;s use our newfound knowledge on the &lt;code&gt;multifile.cxx&lt;/code&gt; file. Our target is the &lt;code&gt;Multifile&lt;/code&gt; class! Execute the following command in &lt;code&gt;panda3d/panda/src/express&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cl /d1reportAllClassLayout multifile.cxx -I../../../built_x64/include &amp;gt; classes.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This will save a LOT of class layouts to a file called &lt;code&gt;classes.txt&lt;/code&gt;. Open &lt;code&gt;classes.txt&lt;/code&gt; and search for &lt;code&gt;class Multifile size&lt;/code&gt;.&lt;/p&gt;
+&lt;h4 id=&#34;multifile-layout&#34;&gt;Multifile layout&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;class Multifile	size(1704):
+	+---
+ 0	| +--- (base class ReferenceCount)
+ 0	| | {vfptr}
+ 8	| | +--- (base class MemoryBase)
+	| | +---
+ 8	| | _ref_count
+16	| | _weak_list
+	| +---
+24	| ?$ov_set@PEAVSubfile@Multifile@@V?$IndirectLess@VSubfile@Multifile@@@@V?$pvector@PEAVSubfile@Multifile@@@@ _subfiles
+64	| ?$pvector@PEAVSubfile@Multifile@@ _new_subfiles
+96	| ?$pvector@PEAVSubfile@Multifile@@ _removed_subfiles
+128	| ?$pvector@PEAVSubfile@Multifile@@ _cert_special
+160	| ?$pvector@V?$pvector@VCertRecord@Multifile@@@@ _signatures
+192	| ?$fpos@U_Mbstatet@@ _offset
+216	| _read
+224	| _write
+232	| _owns_stream
+  	| &amp;lt;alignment member&amp;gt; (size=7)
+240	| ?$fpos@U_Mbstatet@@ _next_index
+264	| ?$fpos@U_Mbstatet@@ _last_index
+288	| ?$fpos@U_Mbstatet@@ _last_data_byte
+312	| _needs_repack
+  	| &amp;lt;alignment member&amp;gt; (size=7)
+320	| _timestamp
+328	| _timestamp_dirty
+329	| _record_timestamp
+  	| &amp;lt;alignment member&amp;gt; (size=6)
+336	| _scale_factor
+344	| _new_scale_factor
+352	| _encryption_flag
+  	| &amp;lt;alignment member&amp;gt; (size=7)
+360	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_password
+392	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_algorithm
+424	| _encryption_key_length
+428	| _encryption_iteration_count
+432	| IFileStream _read_file
+768	| IStreamWrapper _read_filew
+816	| OFileStream _write_file
+1144	| FileStream _read_write_file
+1488	| StreamWrapper _read_write_filew
+1576	| Filename _multifile_name
+1664	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _header_prefix
+1696	| _file_major_ver
+1700	| _file_minor_ver
+	+---
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This is the &lt;strong&gt;Multifile&lt;/strong&gt; class layout on &lt;strong&gt;MSVC 2019, x64 architecture&lt;/strong&gt; as of Feb 27, 2021.&lt;/p&gt;
+&lt;h4 id=&#34;filename-layout&#34;&gt;Filename layout&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;class Filename	size(88):
+	+---
+ 0	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _filename
+32	| _dirname_end
+40	| _basename_start
+48	| _basename_end
+56	| _extension_start
+64	| _hash_start
+72	| _hash_end
+80	| _flags
+  	| &amp;lt;alignment member&amp;gt; (size=4)
+	+---
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This is the &lt;strong&gt;Filename&lt;/strong&gt; class layout on &lt;strong&gt;MSVC 2019, x64 architecture&lt;/strong&gt; as of Feb 27, 2021.&lt;/p&gt;
+&lt;h3 id=&#34;proposed-angle-of-approach&#34;&gt;Proposed angle of approach&lt;/h3&gt;
+&lt;p&gt;Our goal is to extract the password of &lt;code&gt;phase_1.ef&lt;/code&gt; from the memory of our sample project. We&amp;rsquo;re going to be employing memory scanning, following these steps:&lt;/p&gt;
+&lt;h4 id=&#34;step-one-search-for-all-instances-of-phase_1ef-in-the-memory&#34;&gt;Step one: Search for all instances of phase_1.ef in the memory&lt;/h4&gt;
+&lt;p&gt;Scanning for all instances of &lt;code&gt;phase_1.ef&lt;/code&gt; in our process&amp;rsquo;s memory allows us to find all potential &lt;em&gt;Filenames&lt;/em&gt; that might have been allocated as the filename of the mounted multifile.&lt;/p&gt;
+&lt;p&gt;Note that figuring out where the phase name is allocated in memory does not give us a direct path to the Multifile object. If our multifile filename is longer than 16 characters, we still need to figure out every single point in memory where a cross-reference appears, thanks to MSVC&amp;rsquo;s Small String Optimization.&lt;/p&gt;
+&lt;h4 id=&#34;step-two-figure-out-the-beginning-address-of-the-filename&#34;&gt;Step two: Figure out the beginning address of the Filename&lt;/h4&gt;
+&lt;p&gt;Alright, now we&amp;rsquo;ve found all instances of &lt;code&gt;phase_1.ef&lt;/code&gt; in our memory. Let&amp;rsquo;s try each one of them individually.&lt;/p&gt;
+&lt;p&gt;Chances are, however, that the multifile&amp;rsquo;s full filename is NOT just &lt;code&gt;phase_1.ef&lt;/code&gt;! If the multifiles are stored in a different folder, for example in a folder named &lt;code&gt;resources/phase_1.ef&lt;/code&gt;, then we need to find &lt;strong&gt;the entire filename as stored in memory&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;To accomplish this, we&amp;rsquo;ll be peeking &lt;strong&gt;behind&lt;/strong&gt; and &lt;strong&gt;ahead of&lt;/strong&gt; the string that we&amp;rsquo;ve just found. 128 bytes should be enough of a peek window. If we read 128 bytes before &lt;code&gt;phase_1.ef&lt;/code&gt; in memory, then we&amp;rsquo;ll also read the &lt;code&gt;resources/&lt;/code&gt; portion. After that, we just need to run a simple trimming algorithm: beginning from &lt;code&gt;phase_1.ef&lt;/code&gt;, walk behind the string until you encounter a non-ASCII character. Peeking behind will reveal 50% of the full string: &lt;code&gt;resources/phase_1.ef&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;If we read 128 bytes after &lt;code&gt;phase_1.ef&lt;/code&gt; in memory, chances are that we won&amp;rsquo;t find any new characters. But what if we accidentally searched for &lt;code&gt;phase_1.e&lt;/code&gt;? Just to be sure, we&amp;rsquo;ll be peeking ahead of the string as well. Similarly to what we&amp;rsquo;ve done just a second ago, walk ahead of the string until you encounter a non-ASCII character. Peeking ahead will reveal the rest of the full string: &lt;code&gt;resources/phase_1.ef&lt;/code&gt;, even if you&amp;rsquo;ve been looking for &lt;code&gt;phase_1.e&lt;/code&gt; this entire time.&lt;/p&gt;
+&lt;p&gt;Now, we have the full string: &lt;code&gt;resources/phase_1.ef&lt;/code&gt;. The memory address of the first letter, &lt;code&gt;r&lt;/code&gt;, denotes the memory address at which this string was allocated.&lt;/p&gt;
+&lt;h4 id=&#34;step-three-find-our-multifile-object-in-memory&#34;&gt;Step three: Find our Multifile object in memory&lt;/h4&gt;
+&lt;p&gt;The next step consists of finding the Multifile object in memory. We&amp;rsquo;ll be using the &lt;code&gt;_multifile_name&lt;/code&gt; class member of the &lt;code&gt;Multifile&lt;/code&gt; class, as a sort of &lt;strong&gt;gateway&lt;/strong&gt; into the Multifile object. If we can find where the &lt;code&gt;Filename&lt;/code&gt; that allocated the string we found in &lt;em&gt;step two&lt;/em&gt; is, then we&amp;rsquo;ve practically found the Multifile object already.&lt;/p&gt;
+&lt;p&gt;There are two cases:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The string we found in &lt;em&gt;step two&lt;/em&gt; is shorter than or equal to 16 characters, and is not subject to Small String Optimization&lt;/li&gt;
+&lt;li&gt;The string we found in &lt;em&gt;step two&lt;/em&gt; is longer than 16 characters, and is subject to Small String Optimization&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;If the string we found is shorter than or equal to 16 characters, then &lt;strong&gt;congratulations!&lt;/strong&gt; The address at which the string was allocated &lt;strong&gt;is the same address of the &lt;code&gt;Filename&lt;/code&gt; inside the Multifile class, with a relative offset of 1576.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If the string we found is longer than 16 characters, then we&amp;rsquo;ve surely got our work cut out for us. The address at which the string was allocated is certainly not the address of the &lt;code&gt;Filename&lt;/code&gt; object we&amp;rsquo;ve been looking for!&lt;/p&gt;
+&lt;p&gt;Search through all memory again for the memory address of the string. &lt;strong&gt;Each cross-reference to the memory address of the string is a potential &lt;code&gt;Filename&lt;/code&gt; object inside the Multifile class, with a relative offset of 1576 once again.&lt;/strong&gt;&lt;/p&gt;
+&lt;h4 id=&#34;step-four-confirm-that-weve-found-a-multifile-object&#34;&gt;Step four: Confirm that we&amp;rsquo;ve found a Multifile object&lt;/h4&gt;
+&lt;p&gt;So far, we&amp;rsquo;ve only found &lt;strong&gt;potential Multifile objects.&lt;/strong&gt; To make sure that our potential Multifile objects are actual Multifile objects, we should try to identify them somehow. The easiest way would be to check their major and minor versions.&lt;/p&gt;
+&lt;p&gt;Currently, Panda3D multifiles are &lt;em&gt;version 1.1.&lt;/em&gt; &lt;strong&gt;If a potential Multifile object&amp;rsquo;s version is also &lt;em&gt;1.1.&lt;/em&gt;, then it is &lt;em&gt;very likely&lt;/em&gt; that we are dealing with an actual Multifile object.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Since our entry point right now is the &lt;code&gt;Filename&lt;/code&gt; object inside the Multifile class, that means that we are at an offset of 1576. The major version is available at an offset of 1696, while the major version is available at an offset at 1700. Simply navigate &lt;code&gt;1696 - 1576 = 120&lt;/code&gt; bytes forward in the Multifile, and read 4 bytes for the major, as well as 4 bytes for the minor version. &lt;strong&gt;If both of them are equal to 1, then we are dealing with an actual Multifile object.&lt;/strong&gt;&lt;/p&gt;
+&lt;h4 id=&#34;step-five-extract-the-encryption-password-from-the-multifile-object&#34;&gt;Step five: Extract the encryption password from the Multifile object&lt;/h4&gt;
+&lt;p&gt;We&amp;rsquo;ve found our Multifile object! Our entry point is the &lt;code&gt;Filename&lt;/code&gt; object inside the Multifile class: &lt;code&gt;_multifile_name&lt;/code&gt;, at an offset of 1576 bytes. Our target is the &lt;code&gt;_encryption_password&lt;/code&gt; class field:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;360	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_password
+392	| ?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@ _encryption_algorithm
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;_encryption_password&lt;/code&gt; can be found at an offset of 360, so we need to walk &lt;code&gt;1576 - 360 = 1216&lt;/code&gt; bytes backwards in order to read the encryption password, encoded as an &lt;code&gt;?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;A what now?!?!&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://demangler.com&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Let&amp;rsquo;s use an online C++ demangler to figure out what that means.&lt;/a&gt; So, apparently that&amp;rsquo;s an &lt;code&gt;std::basic_string&amp;lt;char, std::char_traits&amp;lt;char&amp;gt;, std::allocator&amp;lt;char&amp;gt;&amp;gt;&lt;/code&gt;. Huh. That&amp;rsquo;s still a weird name. I think &lt;code&gt;std::string&lt;/code&gt; sounds nicer!&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;#stdstring-internals&#34; &gt;Recall the structure of std::string objects.&lt;/a&gt; The 16th to 24th characters signify the &lt;strong&gt;length&lt;/strong&gt; of the &lt;code&gt;std::string&lt;/code&gt;. This should be the very first thing we read, as we need to find out if &lt;strong&gt;Small String Optimization&lt;/strong&gt; is in play or not.&lt;/p&gt;
+&lt;p&gt;If the length of the encryption password is &lt;em&gt;less than or equal to 16&lt;/em&gt;, then &lt;strong&gt;that makes things easier!&lt;/strong&gt; Just read the string at offset 360, and there you have it: the encryption password, in plain text format.&lt;/p&gt;
+&lt;p&gt;However, if the encryption password is &lt;em&gt;longer than 16 characters&lt;/em&gt;, then the first 8 bytes encode a pointer pointing to the actual encryption password. Read these 8 bytes as a pointer, head to the memory address encoded by this pointer, and read the string there. &lt;em&gt;The encryption password stares you down.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Victory!!!&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;An implementation of this algorithm exists in the &lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/p3dephaser/blob/master/p3dephaser/ScanWorker.py&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;P3Dephaser GitHub repository&lt;/a&gt;. Feel free to peruse the code at your own discretion!&lt;/p&gt;
+&lt;h2 id=&#34;introducing-p3dephaser-a-gui-application-to-extract-multifile-passwords&#34;&gt;Introducing P3Dephaser: A GUI application to extract multifile passwords&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Panda3D Dephaser is a proof-of-concept GUI application that extracts multifile passwords from any Panda3D game runtime compiled using MSVC 2019 and the x64 architecture.&lt;/strong&gt;&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;p3dephaser_main.png&#34;/&gt; 
+&lt;/figure&gt;
+
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/p3dephaser&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;The source code of P3Dephaser is available on GitHub for tinkerers and the like.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/p3dephaser/releases/latest&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;End users may download the prebuilt version of P3Dephaser from the GitHub releases page.&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;how-to-use-p3dephaser&#34;&gt;How to use P3Dephaser&lt;/h3&gt;
+&lt;p&gt;To demonstrate the usage of P3Dephaser, we&amp;rsquo;ll be using Panda3D Dephaser in tandem with the &lt;a class=&#34;link&#34; href=&#34;https://github.com/darktohka/panda3d-encryption-demo/releases/latest&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Panda3D Encryption Demo&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Extract the Panda3D Encryption Demo to a new folder and run &lt;code&gt;encryption.exe&lt;/code&gt;. The following demo application will boot up:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;sample_program.png&#34;
+         alt=&#34;The Panda3D Encryption Demo sample program.&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The Panda3D Encryption Demo sample program.&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Your task is to guess the password of the encrypted multifile &lt;code&gt;phase_1.ef&lt;/code&gt; shipped with the application. Of course, this is a daunting task in and out of itself. &lt;strong&gt;But with P3Dephaser, even this is a simple task.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Open &lt;code&gt;P3Dephaser.exe&lt;/code&gt;. The Panda3D Dephaser will appear. Search for the process named &lt;code&gt;encryption.exe&lt;/code&gt; (this is our Panda3D Encryption Demo) and select it with your cursor.&lt;/p&gt;
+&lt;p&gt;After choosing the process, you may now proceed to enter the name of the encrypted multifile: &lt;code&gt;phase_1.ef&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Press the Scan button, confirm that you are indeed scanning for the right multifile, and press &lt;strong&gt;Yes&lt;/strong&gt; to begin the extraction process. It will take a few seconds, but the password will appear in the app&amp;rsquo;s table!&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;p3dephaser_found.png&#34;
+         alt=&#34;The password is easily found by the PoC tool.&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The password is easily found by the PoC tool.&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Enter this password into the Panda3D Encryption Demo, and it should bring you to a special screen, meant to be seen by only those who have succeeded in decrypting the demo:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;sample_program_done.png&#34;
+         alt=&#34;The congratulations screen is blurred for now. You should try the challenge for yourself if you&amp;amp;rsquo;re curious!&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The congratulations screen is blurred for now. You should try the challenge for yourself if you&amp;rsquo;re curious!&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Also decrypt and unpack the encrypted multifile using Panda3D&amp;rsquo;s built-in tools:&lt;/p&gt;
+&lt;figure&gt;
+    &lt;img src=&#34;sample_program_files.png&#34;
+         alt=&#34;The extracted password is the correct password.&#34;/&gt; &lt;figcaption&gt;
+            &lt;p&gt;The extracted password is the correct password.&lt;/p&gt;
+        &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;h2 id=&#34;concluding-notes&#34;&gt;Concluding notes&lt;/h2&gt;
+&lt;p&gt;The multifile format is a really versatile format. Its creation made a lot of games possible. Without the multifile system, Panda3D games most likely wouldn&amp;rsquo;t be doing as well as they are today! Multifiles paved the way for the creation of early MMORPGs, even when their existence was endangered by the then-slow Internet.&lt;/p&gt;
+&lt;p&gt;However, encrypted multifiles provide a false sense of security to any game developer using them. Encrypted multifiles &lt;strong&gt;can&lt;/strong&gt; be decrypted, and they can be decrypted &lt;strong&gt;easily.&lt;/strong&gt; All that&amp;rsquo;s necessary to defeat security through obscurity is somebody with the proper knowledge and enough time on their hands.&lt;/p&gt;
+&lt;p&gt;Data Structure Layout Randomization is not yet mature enough for actual usage in the field. As of Feb 27, 2021, it only exists in academia.&lt;sup id=&#34;fnref:9&#34;&gt;&lt;a href=&#34;#fn:9&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;9&lt;/a&gt;&lt;/sup&gt; The usage of DSLR has also failed in real-world use cases. In 2017, the randomization of the &lt;code&gt;task_struct&lt;/code&gt; struct layout was recommended by Kees Cook, but the plan eventually fell through.&lt;sup id=&#34;fnref:10&#34;&gt;&lt;a href=&#34;#fn:10&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;10&lt;/a&gt;&lt;/sup&gt; According to Linus Torvalds, DSLR is simply security theater.&lt;sup id=&#34;fnref:11&#34;&gt;&lt;a href=&#34;#fn:11&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;11&lt;/a&gt;&lt;/sup&gt; Indeed, in this case, DSLR could be defeated by simply checking each possible offset. This would barely introduce any substantial complexity to the proposed algorithm.&lt;/p&gt;
+&lt;p&gt;Address Space Layout Randomization, enabled by default on compatible binaries beginning from Windows Vista&lt;sup id=&#34;fnref:12&#34;&gt;&lt;a href=&#34;#fn:12&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;12&lt;/a&gt;&lt;/sup&gt;, has zero effect on memory scanning.&lt;/p&gt;
+&lt;p&gt;The only way to prevent encrypted game assets from being decrypted is to create your own game archive format. Unfortunately, custom archive formats would not play nice with the already existing Panda3D engine. &lt;strong&gt;Large game companies have attempted to create custom, encrypted archive formats before, but even these formats are easily reverse engineered by the community.&lt;/strong&gt; Take for example the latest and hottest game: Cyberpunk 2077, for which &lt;a class=&#34;link&#34; href=&#34;https://github.com/WolvenKit/Wolvenkit&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;modding tools capable of archive editing already exist&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s best to just accept that your game assets will eventually be accessed by someone, even if you don&amp;rsquo;t exactly want them to. Accepting this fact opens the gateway to productive creative work by the community, which creates free advertising for your game. &lt;strong&gt;The creative community around a game is often more implicated in keeping the game alive and flourishing than the actual creators.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;I hope you enjoyed reading this article. I am confident that anyone who has read this article will walk away a little bit smarter, mainly more educated about file formats, C++ classes, reverse engineering and memory scanning.&lt;/p&gt;
+&lt;p&gt;If you have any questions or suggestions about this article, please feel free to reach out to me on Discord: &lt;code&gt;Disyer#2168&lt;/code&gt;. Feedback is greatly appreciated!&lt;/p&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/blob/2fd714e52fc41e38f23d4f50078e192f3fc3b9d5/panda/src/express/multifile.cxx#L2&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Mike Goslin, Earliest version of Panda3D&amp;rsquo;s multifile.cxx class, line. 2, 2000.&lt;/a&gt; &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;amp;arnumber=1350741&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Mike Goslin and Mark R. Mine, &amp;ldquo;The Panda3D graphics engine&amp;rdquo;, Computer, vol. 37, no. 10, pp. 112-114, 2004.&lt;/a&gt; &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:3&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.researchgate.net/publication/220686234_Building_a_massively_multiplayer_game_for_the_million_Disney%27s_Toontown_Online&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Mark R. Mine, Joe Shochet and Roger Hughston, &amp;ldquo;Building a massively multiplayer game for the million: Disney&amp;rsquo;s Toontown Online&amp;rdquo;, pp. 15, 2003.&lt;/a&gt; &lt;a href=&#34;#fnref:3&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:4&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://eu.battle.net/support/en/article/76459&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Blizzard, World of Warcraft System Requirements, 2021.&lt;/a&gt; &lt;a href=&#34;#fnref:4&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:5&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://docs.panda3d.org/1.10/python/programming/advanced-loading/multifiles&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Panda3D Wiki, Multifiles, 2021.&lt;/a&gt; &lt;a href=&#34;#fnref:5&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:6&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://github.com/panda3d/panda3d/blob/fb9b334d58a6ff6b900f5804aafeae2212c8b339/dtool/src/prc/encryptStreamBuf.cxx#L121&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;David Rose, Panda3D&amp;rsquo;s encryptStreamBuf.cxx class, line. 121-123, 2021.&lt;/a&gt; &lt;a href=&#34;#fnref:6&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:7&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.online-sciences.com/games/cheat-engine-features-advantages-and-disadvantages&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Heba Soffar, &amp;ldquo;Cheat engine features, advantages and disadvantages&amp;rdquo;, 2019.&lt;/a&gt; &lt;a href=&#34;#fnref:7&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:8&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://devblogs.microsoft.com/cppblog/diagnosing-hidden-odr-violations-in-visual-c-and-fixing-lnk2022&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Andy Rich, &amp;ldquo;Diagnosing Hidden ODR Violations in Visual C++&amp;rdquo;, Microsoft Devblogs, 2007.&lt;/a&gt; &lt;a href=&#34;#fnref:8&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:9&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://link.springer.com/chapter/10.1007/978-3-319-24174-6_4&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Chen, P., Xu, J., Lin, Z., Xu, D., Mao, B., Liu, P., &amp;ldquo;A Practical Approach for Adaptive Data Structure Layout Randomization&amp;rdquo;, ESORICS, 2015.&lt;/a&gt; &lt;a href=&#34;#fnref:9&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:10&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://lwn.net/Articles/722293&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Nur Hussein, &amp;ldquo;Randomizing structure layout&amp;rdquo;, LWN.net, 2017.&lt;/a&gt; &lt;a href=&#34;#fnref:10&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:11&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://marc.info/?l=linux-kernel&amp;amp;m=149083181100577&amp;amp;w=2&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Linus Torvalds, &amp;ldquo;x86/fpu: move FPU state into separate cache&amp;rdquo;, Linux Kernel Mailing List, 2017.&lt;/a&gt; &lt;a href=&#34;#fnref:11&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:12&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://docs.microsoft.com/en-us/previous-versions/bb430720%28v=msdn.10%29&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Michael Howard, Matt Miller, John Lambert and Matt Thomlinson, &amp;ldquo;Windows ISV Software Security Defenses&amp;rdquo;, Microsoft Docs, 2010.&lt;/a&gt; &lt;a href=&#34;#fnref:12&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>
